@@ -5,7 +5,7 @@ export type TabName = 'Inicio' | 'Canhotos' | 'Procedimentos' | 'Gestao' | 'Mais
 /** Quais abas cada nível vê */
 export const TABS_BY_ROLE: Record<NivelAcesso, TabName[]> = {
   colaborador: ['Inicio', 'Canhotos', 'Procedimentos'],
-  supervisor: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao', 'Mais'],
+  supervisor: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao'],
   administracao: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao', 'Mais'],
   admin: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao', 'Mais'],
 };

@@ -3,6 +3,7 @@ import type { TabName } from './tabsConfig';
 /** Para navegar do Hub (tab Inicio) para uma tela em outra aba */
 export const SCREEN_TO_TAB: Record<string, { tab: TabName; screen: string }> = {
   Conferencia: { tab: 'Canhotos', screen: 'Conferencia' },
+  ConferenciaPorLoja: { tab: 'Canhotos', screen: 'ConferenciaPorLoja' },
   LancamentoCanhoto: { tab: 'Canhotos', screen: 'LancamentoCanhoto' },
   VisualizacaoCanhotos: { tab: 'Canhotos', screen: 'VisualizacaoCanhotos' },
   ProcedimentosPromotores: { tab: 'Procedimentos', screen: 'ProcedimentosPromotores' },

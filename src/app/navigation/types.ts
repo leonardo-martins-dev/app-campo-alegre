@@ -6,6 +6,7 @@ export type RootStackParamList = {
   LancamentoCanhoto: undefined;
   VisualizacaoCanhotos: undefined;
   Conferencia: undefined;
+  ConferenciaPorLoja: { lojaId: string; lojaNome: string };
   ProcedimentosPromotores: undefined;
   VisualizacaoProcedimentos: undefined;
   ProcedimentoQuebra: undefined;

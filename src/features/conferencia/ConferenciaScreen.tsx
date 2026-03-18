@@ -26,20 +26,23 @@ export default function ConferenciaScreen({ navigation }: Props) {
   const { user } = useAuth();
   const role = user?.nivelAcesso ?? 'colaborador';
   const isColaborador = role === 'colaborador';
+  const podeEnviarCanhoto = role !== 'administracao'; // administração só visualiza
 
   const ultimosEnviados = MOCK_CANHOTOS.filter((c) => c.status === 'enviado');
   const pendentes = MOCK_CANHOTOS.filter((c) => c.status === 'pendente');
 
   return (
     <ScreenLayout>
-      <TouchableOpacity
-        style={styles.enviarBtn}
-        onPress={() => navigation.navigate('LancamentoCanhoto')}
-        activeOpacity={0.9}
-      >
-        <Upload size={22} color="#fff" />
-        <Text style={styles.enviarBtnText}>Enviar canhoto</Text>
-      </TouchableOpacity>
+      {podeEnviarCanhoto && (
+        <TouchableOpacity
+          style={styles.enviarBtn}
+          onPress={() => navigation.navigate('LancamentoCanhoto')}
+          activeOpacity={0.9}
+        >
+          <Upload size={22} color="#fff" />
+          <Text style={styles.enviarBtnText}>Enviar canhoto</Text>
+        </TouchableOpacity>
+      )}
 
       {isColaborador ? (
         <>
@@ -82,8 +85,14 @@ export default function ConferenciaScreen({ navigation }: Props) {
       ) : (
         <>
           <SectionTitle>Resumo por loja</SectionTitle>
+          <Text style={styles.hint}>Toque em uma loja para ver canhotos enviados e pendentes.</Text>
           {MOCK_CONFERENCIA.map((item) => (
-            <View key={item.id} style={styles.card}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.card}
+              onPress={() => navigation.navigate('ConferenciaPorLoja', { lojaId: item.id, lojaNome: item.loja })}
+              activeOpacity={0.8}
+            >
               <Text style={styles.loja}>{item.loja}</Text>
               <View style={styles.stats}>
                 <View style={styles.stat}>
@@ -100,7 +109,7 @@ export default function ConferenciaScreen({ navigation }: Props) {
                 </View>
               </View>
               <Text style={styles.updated}>Atualizado: {item.ultimaAtualizacao}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </>
       )}
@@ -144,4 +153,5 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '700', color: colors.text },
   statLabel: { ...typography.small, color: colors.textSecondary, marginTop: 2 },
   updated: { ...typography.small, color: colors.textSecondary, marginTop: spacing.md },
+  hint: { ...typography.small, color: colors.textSecondary, marginBottom: spacing.sm },
 });

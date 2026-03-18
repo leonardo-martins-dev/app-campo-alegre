@@ -12,6 +12,23 @@ export interface Canhoto {
   enviadoEm?: string;
 }
 
+export type CanhotoSistemaStatus = 'disponivel' | 'atrasado';
+
+export interface CanhotoSistema {
+  numero: string;
+  data: string;
+  nfe: string | null;
+  total: number | null;
+  nome_fantasia: string | null;
+  status: CanhotoSistemaStatus;
+}
+
+export interface CanhotoLancadoDetalhe extends Canhoto {
+  usuario: string;
+  fotoUrl?: string;
+  observacoes?: string;
+}
+
 export interface ConferenciaItem {
   id: string;
   loja: string;
@@ -55,6 +72,103 @@ export const MOCK_CANHOTOS: Canhoto[] = [
   { id: '3', numero: '1003', loja: 'Loja Sul', data: '2025-02-23', status: 'enviado', enviadoEm: '23/02 09:15' },
   { id: '4', numero: '1004', loja: 'Loja Norte', data: '2025-02-23', status: 'divergente', enviadoEm: '23/02 14:00' },
   { id: '5', numero: '1005', loja: 'Loja Centro', data: '2025-02-22', status: 'enviado', enviadoEm: '22/02 08:45' },
+];
+
+/** Vista detalhada usada na tela unificada de canhotos para Admin. */
+export const MOCK_CANHOTOS_LANCADOS: CanhotoLancadoDetalhe[] = [
+  {
+    id: '1',
+    numero: '1001',
+    loja: 'Loja Centro',
+    data: '2025-02-24',
+    status: 'enviado',
+    enviadoEm: '24/02 08:32',
+    usuario: 'Maria Silva',
+    fotoUrl: 'https://placehold.co/600x300',
+    observacoes: 'Entregue no balcão principal',
+  },
+  {
+    id: '2',
+    numero: '1002',
+    loja: 'Loja Centro',
+    data: '2025-02-24',
+    status: 'pendente',
+    usuario: 'Maria Silva',
+    observacoes: 'Aguardando conferência',
+  },
+  {
+    id: '3',
+    numero: '1003',
+    loja: 'Loja Sul',
+    data: '2025-02-23',
+    status: 'enviado',
+    enviadoEm: '23/02 09:15',
+    usuario: 'João Santos',
+    fotoUrl: 'https://placehold.co/600x300',
+  },
+  {
+    id: '4',
+    numero: '1004',
+    loja: 'Loja Norte',
+    data: '2025-02-23',
+    status: 'divergente',
+    enviadoEm: '23/02 14:00',
+    usuario: 'Ana Costa',
+    observacoes: 'Valor divergente do sistema',
+  },
+  {
+    id: '5',
+    numero: '1005',
+    loja: 'Loja Centro',
+    data: '2025-02-22',
+    status: 'enviado',
+    enviadoEm: '22/02 08:45',
+    usuario: 'Maria Silva',
+  },
+];
+
+/** Simulação de canhotos do sistema (disponíveis e atrasados) para Admin. */
+export const MOCK_CANHOTOS_SISTEMA: CanhotoSistema[] = [
+  {
+    numero: '1001',
+    data: '2025-02-24',
+    nfe: 'NF-9001',
+    total: 123.45,
+    nome_fantasia: 'Loja Centro',
+    status: 'disponivel',
+  },
+  {
+    numero: '1002',
+    data: '2025-02-24',
+    nfe: 'NF-9002',
+    total: 87.9,
+    nome_fantasia: 'Loja Centro',
+    status: 'disponivel',
+  },
+  {
+    numero: '1003',
+    data: '2025-02-22',
+    nfe: 'NF-8801',
+    total: 210.0,
+    nome_fantasia: 'Loja Sul',
+    status: 'atrasado',
+  },
+  {
+    numero: '1004',
+    data: '2025-02-20',
+    nfe: 'NF-8701',
+    total: 75.5,
+    nome_fantasia: 'Loja Norte',
+    status: 'atrasado',
+  },
+  {
+    numero: '1005',
+    data: '2025-02-23',
+    nfe: null,
+    total: null,
+    nome_fantasia: 'Loja Centro',
+    status: 'disponivel',
+  },
 ];
 
 /** Números de canhoto disponíveis para seleção no lançamento (mock). */

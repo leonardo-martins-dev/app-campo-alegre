@@ -14,6 +14,7 @@ import LoadingScreen from '../../shared/components/LoadingScreen';
 import LancamentoCanhotoScreen from '../../features/canhotos/LancamentoCanhotoScreen';
 import VisualizacaoCanhotosScreen from '../../features/canhotos/VisualizacaoCanhotosScreen';
 import ConferenciaScreen from '../../features/conferencia/ConferenciaScreen';
+import ConferenciaPorLojaScreen from '../../features/conferencia/ConferenciaPorLojaScreen';
 import ProcedimentosPromotoresScreen from '../../features/procedimentos/ProcedimentosPromotoresScreen';
 import VisualizacaoProcedimentosScreen from '../../features/procedimentos/VisualizacaoProcedimentosScreen';
 import ProcedimentoQuebraScreen from '../../features/procedimentos/ProcedimentoQuebraScreen';
@@ -48,6 +49,7 @@ function CanhotosStack() {
   return (
     <Stack.Navigator screenOptions={headerOptions}>
       <Stack.Screen name="Conferencia" component={ConferenciaScreen} />
+      <Stack.Screen name="ConferenciaPorLoja" component={ConferenciaPorLojaScreen} />
       <Stack.Screen name="LancamentoCanhoto" component={LancamentoCanhotoScreen} />
       <Stack.Screen name="VisualizacaoCanhotos" component={VisualizacaoCanhotosScreen} />
     </Stack.Navigator>
