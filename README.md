@@ -11,6 +11,10 @@ Aplicativo **Expo** (React Native) da empresa Campo Alegre: hub central de açõ
 
 Documentação de negócio e arquitetura: **[../central-hub/doc.md](../central-hub/doc.md)**.
 
+Lançamento App Store, backend e banco de dados: **[../central-hub/lancamento-app-store.md](../central-hub/lancamento-app-store.md)**.
+
+Backend SQL: **[../supabase/README.md](../supabase/README.md)** · Painel web: **[../web/README.md](../web/README.md)**.
+
 ## Login (dados mockados)
 
 | E-mail | Senha  | Nível        |
@@ -19,6 +23,15 @@ Documentação de negócio e arquitetura: **[../central-hub/doc.md](../central-h
 | supervisor@campoalegre.com | 123456 | Supervisor   |
 | administracao@campoalegre.com | 123456 | Administração |
 | admin@campoalegre.com | 123456 | Admin        |
+
+## Configuração Supabase
+
+```bash
+cp .env.example .env
+# Preencha EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY
+```
+
+Sem `.env`, o app usa dados mock para desenvolvimento offline.
 
 ## Como rodar
 

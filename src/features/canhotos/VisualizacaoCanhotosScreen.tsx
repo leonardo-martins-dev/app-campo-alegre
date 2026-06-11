@@ -1,14 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
 import {
-  MOCK_CANHOTOS_LANCADOS,
-  MOCK_CANHOTOS_SISTEMA,
-  MOCK_LOJAS,
   type CanhotoLancadoDetalhe,
   type CanhotoSistema,
+  type Loja,
 } from '../../shared/mock/data';
+import { fetchCanhotosLancados, fetchCanhotosSistema } from '../../core/api/canhotos';
+import { fetchLojasAtivas } from '../../core/api/lojas';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 
 const statusLabel: Record<string, string> = {
@@ -27,33 +27,41 @@ export default function VisualizacaoCanhotosScreen() {
   const [numeroFiltro, setNumeroFiltro] = useState('');
   const [lojaFiltro, setLojaFiltro] = useState<string | null>(null);
 
-  const lojasAtivas = MOCK_LOJAS.filter((l) => l.ativa);
+  const [lancados, setLancados] = useState<CanhotoLancadoDetalhe[]>([]);
+  const [sistema, setSistema] = useState<CanhotoSistema[]>([]);
+  const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
+
+  useEffect(() => {
+    fetchCanhotosLancados().then(setLancados).catch(() => setLancados([]));
+    fetchCanhotosSistema().then(setSistema).catch(() => setSistema([]));
+    fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
+  }, []);
 
   const filtradosLancados = useMemo(() => {
-    return MOCK_CANHOTOS_LANCADOS.filter((c) => {
+    return lancados.filter((c) => {
       if (numeroFiltro && !c.numero.includes(numeroFiltro.trim())) return false;
       if (lojaFiltro && c.loja !== lojaFiltro) return false;
       return true;
     });
-  }, [numeroFiltro, lojaFiltro]);
+  }, [lancados, numeroFiltro, lojaFiltro]);
 
   const filtradosSistemaDisponiveis = useMemo<CanhotoSistema[]>(() => {
-    return MOCK_CANHOTOS_SISTEMA.filter((c) => {
+    return sistema.filter((c) => {
       if (c.status !== 'disponivel') return false;
       if (numeroFiltro && !c.numero.includes(numeroFiltro.trim())) return false;
       if (lojaFiltro && c.nome_fantasia !== lojaFiltro) return false;
       return true;
     });
-  }, [numeroFiltro, lojaFiltro]);
+  }, [sistema, numeroFiltro, lojaFiltro]);
 
   const filtradosSistemaAtrasados = useMemo<CanhotoSistema[]>(() => {
-    return MOCK_CANHOTOS_SISTEMA.filter((c) => {
+    return sistema.filter((c) => {
       if (c.status !== 'atrasado') return false;
       if (numeroFiltro && !c.numero.includes(numeroFiltro.trim())) return false;
       if (lojaFiltro && c.nome_fantasia !== lojaFiltro) return false;
       return true;
     });
-  }, [numeroFiltro, lojaFiltro]);
+  }, [sistema, numeroFiltro, lojaFiltro]);
 
   const limparFiltros = () => {
     setNumeroFiltro('');

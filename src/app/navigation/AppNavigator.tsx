@@ -45,7 +45,7 @@ function InicioStack() {
 }
 
 function CanhotosStack() {
-  const Stack = createNativeStackNavigator();
+  const Stack = createNativeStackNavigator<RootStackParamList>();
   return (
     <Stack.Navigator screenOptions={headerOptions}>
       <Stack.Screen name="Conferencia" component={ConferenciaScreen} />

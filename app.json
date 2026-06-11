@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Campo Alegre",
+    "slug": "campo-alegre",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,21 +10,55 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0c4a6e"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.campoalegre.hub",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Para fotografar canhotos e procedimentos de campo.",
+        "NSPhotoLibraryUsageDescription": "Para anexar fotos da galeria nos envios operacionais.",
+        "NSMicrophoneUsageDescription": "Microfone usado apenas se necessário pela câmera."
+      }
     },
     "android": {
+      "package": "com.campoalegre.hub",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0c4a6e"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "SUBSTITUIR_EAS_PROJECT_ID"
+      },
+      "privacyPolicyUrl": "https://seu-dominio.com/privacidade"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite anexar fotos de canhotos e procedimentos.",
+          "cameraPermission": "Permite fotografar canhotos e procedimentos."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite fotografar canhotos e procedimentos."
+        }
+      ]
+    ]
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,22 +7,61 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Alert,
 } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
-import { MOCK_CHECKLIST_QUEBRA, MOCK_LOJAS } from '../../shared/mock/data';
+import { MOCK_CHECKLIST_QUEBRA } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 import { ChevronDown } from 'lucide-react-native';
+import { useAuth } from '../../core/auth/AuthContext';
+import { fetchLojasAtivas } from '../../core/api/lojas';
+import { enviarProcedimento } from '../../core/api/procedimentos';
+import type { Loja } from '../../shared/mock/data';
 
 export default function ProcedimentoQuebraScreen() {
+  const { user } = useAuth();
   const [itens, setItens] = useState(MOCK_CHECKLIST_QUEBRA);
+  const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
   const [lojaModalVisible, setLojaModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const lojasAtivas = MOCK_LOJAS.filter((l) => l.ativa);
+  useEffect(() => {
+    fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
+  }, []);
 
   const toggle = (id: string) => {
     setItens((prev) => prev.map((i) => (i.id === id ? { ...i, concluido: !i.concluido } : i)));
+  };
+
+  const handleEnviar = async () => {
+    if (!loja || !user?.id) {
+      Alert.alert('Supermercado', 'Selecione o supermercado.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await enviarProcedimento({
+        tipo: 'quebra',
+        lojaId: loja.id,
+        usuarioId: user.id,
+        itens: itens.map((i) => ({
+          id: i.id,
+          label: i.label,
+          concluido: i.concluido,
+          requiresPhoto: i.id === '3',
+        })),
+        fotos: {},
+      });
+      Alert.alert('Enviado', 'Procedimento de quebra registrado.');
+      setItens(MOCK_CHECKLIST_QUEBRA);
+      setLoja(null);
+    } catch (e) {
+      Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível enviar.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -77,8 +116,15 @@ export default function ProcedimentoQuebraScreen() {
           </TouchableOpacity>
         ))}
       </View>
-      <TouchableOpacity style={styles.button} activeOpacity={0.85}>
-        <Text style={styles.buttonText}>Enviar procedimento de quebra</Text>
+      <TouchableOpacity
+        style={[styles.button, submitting && { opacity: 0.7 }]}
+        onPress={handleEnviar}
+        disabled={submitting}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.buttonText}>
+          {submitting ? 'Enviando...' : 'Enviar procedimento de quebra'}
+        </Text>
       </TouchableOpacity>
     </ScreenLayout>
   );

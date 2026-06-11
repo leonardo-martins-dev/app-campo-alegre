@@ -19,26 +19,63 @@ import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
 import CanhotoCamera from '../../shared/components/CanhotoCamera';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
-import { MOCK_NUMEROS_CANHOTO } from '../../shared/mock/data';
+import { useAuth } from '../../core/auth/AuthContext';
+import { fetchNumerosCanhotoDisponiveis, registrarCanhoto } from '../../core/api/canhotos';
 import { ImagePlus, ChevronDown } from 'lucide-react-native';
 
 const POPOVER_GAP = 4;
 const POPOVER_MAX_HEIGHT = 220;
 
 export default function LancamentoCanhotoScreen() {
+  const { user } = useAuth();
   const [numero, setNumero] = useState('');
+  const [numeros, setNumeros] = useState<string[]>([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [filter, setFilter] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [showCanhotoCamera, setShowCanhotoCamera] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(null);
   const triggerRef = useRef<View>(null);
 
+  useEffect(() => {
+    fetchNumerosCanhotoDisponiveis(user?.lojaId)
+      .then(setNumeros)
+      .catch(() => setNumeros([]));
+  }, [user?.lojaId]);
+
   const filteredNumbers = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    if (!q) return MOCK_NUMEROS_CANHOTO;
-    return MOCK_NUMEROS_CANHOTO.filter((n) => n.includes(q));
-  }, [filter]);
+    if (!q) return numeros;
+    return numeros.filter((n) => n.includes(q));
+  }, [filter, numeros]);
+
+  const handleRegistrar = async () => {
+    if (!numero || !photoUri) {
+      Alert.alert('Campos obrigatórios', 'Selecione o número do canhoto e anexe a foto.');
+      return;
+    }
+    if (!user?.id || !user.lojaId) {
+      Alert.alert('Perfil incompleto', 'Seu usuário precisa estar vinculado a uma loja.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await registrarCanhoto({
+        numero,
+        lojaId: user.lojaId,
+        usuarioId: user.id,
+        photoUri,
+      });
+      Alert.alert('Sucesso', 'Canhoto registrado com sucesso.');
+      setNumero('');
+      setPhotoUri(null);
+    } catch (e) {
+      Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível registrar o canhoto.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (dropdownVisible && triggerRef.current) {
@@ -193,8 +230,13 @@ export default function LancamentoCanhotoScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} activeOpacity={0.85}>
-            <Text style={styles.buttonText}>Registrar canhoto</Text>
+          <TouchableOpacity
+            style={[styles.button, submitting && styles.buttonDisabled]}
+            onPress={handleRegistrar}
+            disabled={submitting}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.buttonText}>{submitting ? 'Registrando...' : 'Registrar canhoto'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -337,4 +379,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  buttonDisabled: { opacity: 0.7 },
 });

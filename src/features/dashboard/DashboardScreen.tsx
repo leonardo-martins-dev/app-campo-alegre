@@ -1,19 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
-import { MOCK_DASHBOARD } from '../../shared/mock/data';
+import { fetchDashboardMetrics } from '../../core/api/dashboard';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 
-const cards = [
-  { label: 'Canhotos hoje', value: MOCK_DASHBOARD.canhotosHoje, color: colors.primary },
-  { label: 'Canhotos pendentes', value: MOCK_DASHBOARD.canhotosPendentes, color: colors.warning },
-  { label: 'Procedimentos hoje', value: MOCK_DASHBOARD.procedimentosHoje, color: colors.secondary },
-  { label: 'Divergências pendentes', value: MOCK_DASHBOARD.divergenciasPendentes, color: colors.error },
-  { label: 'Usuários ativos', value: MOCK_DASHBOARD.usuariosAtivos, color: colors.success },
-];
-
 export default function DashboardScreen() {
+  const [metrics, setMetrics] = useState({
+    canhotosHoje: 0,
+    canhotosPendentes: 0,
+    procedimentosHoje: 0,
+    divergenciasPendentes: 0,
+    usuariosAtivos: 0,
+  });
+
+  useEffect(() => {
+    fetchDashboardMetrics().then(setMetrics).catch(() => {});
+  }, []);
+
+  const cards = [
+    { label: 'Canhotos hoje', value: metrics.canhotosHoje, color: colors.primary },
+    { label: 'Canhotos pendentes', value: metrics.canhotosPendentes, color: colors.warning },
+    { label: 'Procedimentos hoje', value: metrics.procedimentosHoje, color: colors.secondary },
+    { label: 'Divergências pendentes', value: metrics.divergenciasPendentes, color: colors.error },
+    { label: 'Usuários ativos', value: metrics.usuariosAtivos, color: colors.success },
+  ];
+
   return (
     <ScreenLayout>
       <SectionTitle>Visão geral</SectionTitle>

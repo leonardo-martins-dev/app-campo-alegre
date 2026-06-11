@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,15 +13,22 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
-import { CHECKLIST_PROMOTOR_11, MOCK_LOJAS } from '../../shared/mock/data';
+import { CHECKLIST_PROMOTOR_11 } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
+import { useAuth } from '../../core/auth/AuthContext';
+import { fetchLojasAtivas } from '../../core/api/lojas';
+import { enviarProcedimento } from '../../core/api/procedimentos';
+import type { Loja } from '../../shared/mock/data';
 import { ImagePlus, ChevronDown } from 'lucide-react-native';
 
 type PhotoIds = 'abertura' | 'reabertura' | 'manter';
 
 export default function ProcedimentosPromotoresScreen() {
+  const { user } = useAuth();
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
+  const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
   const [lojaModalVisible, setLojaModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [concluidos, setConcluidos] = useState<Record<string, boolean>>({});
   const [photos, setPhotos] = useState<Record<PhotoIds, string[]>>({
     abertura: [],
@@ -29,7 +36,9 @@ export default function ProcedimentosPromotoresScreen() {
     manter: [],
   });
 
-  const lojasAtivas = MOCK_LOJAS.filter((l) => l.ativa);
+  useEffect(() => {
+    fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
+  }, []);
 
   const toggle = (id: string) => {
     setConcluidos((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -51,11 +60,11 @@ export default function ProcedimentosPromotoresScreen() {
 
   const pickImage = useCallback(
     async (itemId: PhotoIds, source: 'camera' | 'library') => {
-      const opts = {
-        mediaTypes: ['images'] as const,
+      const opts: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
         quality: 0.8,
         allowsEditing: source === 'camera',
-        aspect: source === 'camera' ? [4, 3] as const : undefined,
+        aspect: source === 'camera' ? [4, 3] : undefined,
       };
       const result =
         source === 'camera'
@@ -105,9 +114,34 @@ export default function ProcedimentosPromotoresScreen() {
     photos.abertura.length >= 1 && photos.reabertura.length >= 1 && photos.manter.length >= 1;
   const canSubmit = allChecked && photoItemsOk;
 
-  const handleEnviar = () => {
-    if (!canSubmit) return;
-    Alert.alert('Procedimento enviado', 'Seu checklist foi registrado com sucesso.', [{ text: 'OK' }]);
+  const handleEnviar = async () => {
+    if (!canSubmit || !loja || !user?.id) {
+      if (!loja) Alert.alert('Supermercado', 'Selecione o supermercado.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await enviarProcedimento({
+        tipo: 'promotor',
+        lojaId: loja.id,
+        usuarioId: user.id,
+        itens: CHECKLIST_PROMOTOR_11.map((i) => ({
+          id: i.id,
+          label: i.label,
+          concluido: !!concluidos[i.id],
+          requiresPhoto: i.requiresPhoto,
+        })),
+        fotos: photos,
+      });
+      Alert.alert('Procedimento enviado', 'Seu checklist foi registrado com sucesso.', [{ text: 'OK' }]);
+      setConcluidos({});
+      setPhotos({ abertura: [], reabertura: [], manter: [] });
+      setLoja(null);
+    } catch (e) {
+      Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível enviar.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

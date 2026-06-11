@@ -1,15 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
-import { MOCK_LOJAS } from '../../shared/mock/data';
+import { fetchLojasAtivas } from '../../core/api/lojas';
+import type { Loja } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 
 export default function GestaoLojasScreen() {
+  const [lojas, setLojas] = useState<Loja[]>([]);
+
+  useEffect(() => {
+    fetchLojasAtivas()
+      .then((all) => setLojas(all))
+      .catch(() => setLojas([]));
+  }, []);
+
   return (
     <ScreenLayout>
       <SectionTitle>Lojas</SectionTitle>
-      {MOCK_LOJAS.map((l) => (
+      {lojas.map((l) => (
         <View key={l.id} style={[styles.card, !l.ativa && styles.cardInativa]}>
           <Text style={styles.nome}>{l.nome}</Text>
           <Text style={styles.codigo}>{l.codigo} · {l.regiao}</Text>

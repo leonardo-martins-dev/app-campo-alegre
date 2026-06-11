@@ -9,6 +9,7 @@ export interface User {
   nome: string;
   email: string;
   nivelAcesso: NivelAcesso;
+  lojaId?: string;
   ativo: boolean;
 }
 

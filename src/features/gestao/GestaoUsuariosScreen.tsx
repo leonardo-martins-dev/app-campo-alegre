@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
-import { MOCK_USUARIOS } from '../../shared/mock/data';
+import { fetchUsuarios } from '../../core/api/profiles';
+import type { Usuario } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 
 export default function GestaoUsuariosScreen() {
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+
+  useEffect(() => {
+    fetchUsuarios().then(setUsuarios).catch(() => setUsuarios([]));
+  }, []);
+
   return (
     <ScreenLayout>
       <SectionTitle>Usuários</SectionTitle>
-      {MOCK_USUARIOS.map((u) => (
+      {usuarios.map((u) => (
         <View key={u.id} style={[styles.card, !u.ativo && styles.cardInativo]}>
           <Text style={styles.nome}>{u.nome}</Text>
           <Text style={styles.email}>{u.email}</Text>

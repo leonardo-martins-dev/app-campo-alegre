@@ -78,8 +78,7 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <Text style={styles.hint}>Demonstração: use qualquer usuário mock</Text>
-          <Text style={styles.hintSmall}>Ex: admin@campoalegre.com / 123456</Text>
+          <Text style={styles.hint}>Use o e-mail e senha fornecidos pela administração.</Text>
         </View>
       </KeyboardAvoidingView>
     </LinearGradient>

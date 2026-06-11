@@ -8,7 +8,7 @@ export interface Canhoto {
   numero: string;
   loja: string;
   data: string;
-  status: 'enviado' | 'pendente' | 'divergente';
+  status: 'enviado' | 'pendente' | 'divergente' | 'aprovado' | 'rejeitado';
   enviadoEm?: string;
 }
 

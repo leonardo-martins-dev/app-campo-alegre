@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
-import { MOCK_PROCEDIMENTOS_QUEBRA } from '../../shared/mock/data';
+import { fetchProcedimentos } from '../../core/api/procedimentos';
+import type { Procedimento } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 
 export default function VisualizacaoQuebraScreen() {
+  const [lista, setLista] = useState<Procedimento[]>([]);
+
+  useEffect(() => {
+    fetchProcedimentos('quebra').then(setLista).catch(() => setLista([]));
+  }, []);
+
   return (
     <ScreenLayout>
       <SectionTitle>Procedimentos de quebra</SectionTitle>
-      {MOCK_PROCEDIMENTOS_QUEBRA.map((p) => (
+      {lista.map((p) => (
         <View key={p.id} style={styles.card}>
           <Text style={styles.colaborador}>{p.colaborador}</Text>
           <Text style={styles.loja}>{p.loja} · {p.data}</Text>
