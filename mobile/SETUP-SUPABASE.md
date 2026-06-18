@@ -1,6 +1,6 @@
 # Setup Supabase — Campo Alegre
 
-Backend compartilhado pelo **app mobile** e **painel web**. Scripts SQL em [`../campo-alegre-admin/supabase/`](../campo-alegre-admin/supabase/).
+Backend compartilhado pelo **app mobile** e **painel web**. Scripts SQL em [`../supabase/`](../supabase/).
 
 ## Checklist
 
@@ -11,11 +11,13 @@ Backend compartilhado pelo **app mobile** e **painel web**. Scripts SQL em [`../
 
 ### 2. Executar migrations
 
-No **SQL Editor**, execute na ordem os arquivos em `campo-alegre-admin/supabase/migrations/`:
+No **SQL Editor**, execute na ordem os arquivos em `supabase/migrations/` (a partir da raiz do repo):
 
 `001` → `002` → `003` → `003b` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `010b` (após criar usuário admin no Auth)
 
-Validação: rode `campo-alegre-admin/supabase/validate.sql`
+Validação: rode `supabase/validate.sql`
+
+Ou liste a ordem: `../scripts/run-migrations-order.ps1`
 
 ### 3. Primeiro admin
 
@@ -36,9 +38,10 @@ Personalize o template **Invite user** em português.
 
 ### 5. Edge Functions
 
-Com [Supabase CLI](https://supabase.com/docs/guides/cli) instalado, na pasta `campo-alegre-admin/supabase`:
+Com [Supabase CLI](https://supabase.com/docs/guides/cli) instalado, na pasta `supabase/`:
 
 ```bash
+cd ../supabase
 supabase link --project-ref SEU_PROJECT_REF
 supabase functions deploy invite-user
 supabase functions deploy upload-sistema
@@ -48,7 +51,7 @@ Defina `INVITE_REDIRECT_URL=https://seu-dominio.com/auth/cadastro` nos secrets d
 
 ### 6. Variáveis no app mobile
 
-Nesta pasta (`campo-alegre-mobile`):
+Nesta pasta (`mobile/`):
 
 ```bash
 cp .env.example .env
@@ -70,7 +73,7 @@ eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "
 
 ### 7. Variáveis no painel web
 
-Em `campo-alegre-admin/web/.env.local`:
+Em `web/.env.local`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co

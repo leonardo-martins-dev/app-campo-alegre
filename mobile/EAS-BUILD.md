@@ -1,6 +1,6 @@
 # Build iOS — App Store (EAS)
 
-Execute todos os comandos **nesta pasta** (`campo-alegre-mobile`). Não inclui o painel web.
+Execute todos os comandos **nesta pasta** (`mobile/`). Não inclui o painel web.
 
 ## Pré-requisitos
 
