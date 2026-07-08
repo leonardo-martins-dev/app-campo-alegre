@@ -1,25 +1,28 @@
 # Checklist — Supabase em produção (pré-deploy iOS)
 
+**Projeto:** Campo alegre - app (`yhdoradocardgedgrgzj`)  
+**URL:** `https://yhdoradocardgedgrgzj.supabase.co`
+
 Execute na ordem antes do build EAS de produção.
 
 ## 1. Projeto Supabase
 
-- [ ] Projeto criado em [supabase.com](https://supabase.com)
-- [ ] Anotar **Project URL** e **anon public key** (Settings → API)
-- [ ] Anotar **Project Ref** (para Edge Functions)
+- [x] Projeto criado em [supabase.com](https://supabase.com)
+- [x] Anotar **Project URL** e **anon public key** (Settings → API)
+- [x] Anotar **Project Ref** (`yhdoradocardgedgrgzj`)
 
 ## 2. Migrations
 
 Execute na ordem (SQL Editor ou `scripts/run-migrations-order.ps1`):
 
-- [ ] `001` → `002` → `003` → `003b` → `004` → `005` → `006` → `007` → `008` → `009` → `010`
-- [ ] Criar usuário admin no Auth → executar `010b_seed_admin_profile.sql` com o UUID
-- [ ] Rodar `supabase/validate.sql` sem erros
+- [x] `001` → `002` → `003` → `003b` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `010c`
+- [x] Criar usuário admin no Auth → executar `010b_seed_admin_profile.sql` com o UUID
+- [x] Rodar `supabase/validate.sql` sem erros (4 lojas, 5 canhotos sistema, 14 checklist templates)
 
 ## 3. Storage
 
-- [ ] Bucket `canhotos-fotos` existe e políticas RLS ativas (migration `009`)
-- [ ] Bucket `procedimentos-fotos` existe e políticas RLS ativas
+- [x] Bucket `canhotos-fotos` existe e políticas RLS ativas (migration `009`)
+- [x] Bucket `procedimentos-fotos` existe e políticas RLS ativas
 
 ## 4. Auth
 

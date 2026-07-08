@@ -11,6 +11,8 @@ $migrations = @(
   '008_rls_policies.sql',
   '009_storage_buckets.sql',
   '010_seed.sql',
+  '010c_harden_handle_new_user.sql',
+  '011_fix_handle_new_user.sql',
   '010b_seed_admin_profile.sql'
 )
 
