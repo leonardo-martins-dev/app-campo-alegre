@@ -105,15 +105,6 @@ export const HUB_ACTIONS: HubAction[] = [
     color: '#ec4899',
   },
   {
-    id: 'upload-sistema',
-    label: 'Upload do Sistema',
-    description: 'Importação em massa de dados',
-    screen: 'UploadSistema',
-    roles: ['admin'],
-    icon: 'FileSpreadsheet',
-    color: '#14b8a6',
-  },
-  {
     id: 'dashboard',
     label: 'Dashboard',
     description: 'Métricas e visão geral',
@@ -121,15 +112,6 @@ export const HUB_ACTIONS: HubAction[] = [
     roles: ['admin'],
     icon: 'BarChart3',
     color: '#0d9488',
-  },
-  {
-    id: 'importador-pedidos',
-    label: 'Importador de Pedidos',
-    description: 'Importar, vincular e exportar planilhas',
-    screen: 'ImportadorPedidos',
-    roles: ['administracao', 'admin'],
-    icon: 'FileText',
-    color: '#059669',
   },
 ];
 
@@ -147,9 +129,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { id: 'ver-quebra', label: 'Ver Quebra', screen: 'VisualizacaoQuebra', roles: ['supervisor', 'administracao', 'admin'], icon: 'AlertTriangle' },
   { id: 'gestao-usuarios', label: 'Usuários', screen: 'GestaoUsuarios', roles: ['supervisor', 'administracao'], icon: 'Users' },
   { id: 'gestao-lojas', label: 'Lojas', screen: 'GestaoLojas', roles: ['admin'], icon: 'Store' },
-  { id: 'upload', label: 'Upload Sistema', screen: 'UploadSistema', roles: ['admin'], icon: 'FileSpreadsheet' },
   { id: 'dashboard', label: 'Dashboard', screen: 'Dashboard', roles: ['admin'], icon: 'BarChart3' },
-  { id: 'importador', label: 'Importador Pedidos', screen: 'ImportadorPedidos', roles: ['administracao', 'admin'], icon: 'FileText' },
 ];
 
 export function getActionsForRole(role: NivelAcesso): HubAction[] {

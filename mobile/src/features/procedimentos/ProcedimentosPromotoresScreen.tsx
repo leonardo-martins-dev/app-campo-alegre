@@ -17,27 +17,34 @@ import { CHECKLIST_PROMOTOR_11 } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 import { useAuth } from '../../core/auth/AuthContext';
 import { fetchLojasAtivas } from '../../core/api/lojas';
-import { enviarProcedimento } from '../../core/api/procedimentos';
+import { enviarProcedimento, fetchChecklistTemplate } from '../../core/api/procedimentos';
 import type { Loja } from '../../shared/mock/data';
 import { ImagePlus, ChevronDown } from 'lucide-react-native';
 
-type PhotoIds = 'abertura' | 'reabertura' | 'manter';
+type ChecklistItem = { id: string; label: string; requiresPhoto: boolean };
 
 export default function ProcedimentosPromotoresScreen() {
   const { user } = useAuth();
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
   const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(CHECKLIST_PROMOTOR_11);
   const [lojaModalVisible, setLojaModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [concluidos, setConcluidos] = useState<Record<string, boolean>>({});
-  const [photos, setPhotos] = useState<Record<PhotoIds, string[]>>({
-    abertura: [],
-    reabertura: [],
-    manter: [],
-  });
+  const [photos, setPhotos] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
+    fetchChecklistTemplate('promotor')
+      .then((items) => {
+        setChecklist(items);
+        const initialPhotos: Record<string, string[]> = {};
+        items.filter((i) => i.requiresPhoto).forEach((i) => {
+          initialPhotos[i.id] = [];
+        });
+        setPhotos(initialPhotos);
+      })
+      .catch(() => setChecklist(CHECKLIST_PROMOTOR_11));
   }, []);
 
   const toggle = (id: string) => {
@@ -59,7 +66,7 @@ export default function ProcedimentosPromotoresScreen() {
   }, []);
 
   const pickImage = useCallback(
-    async (itemId: PhotoIds, source: 'camera' | 'library') => {
+    async (itemId: string, source: 'camera' | 'library') => {
       const opts: ImagePicker.ImagePickerOptions = {
         mediaTypes: ['images'],
         quality: 0.8,
@@ -79,7 +86,7 @@ export default function ProcedimentosPromotoresScreen() {
   );
 
   const handleAddPhoto = useCallback(
-    (itemId: PhotoIds) => {
+    (itemId: string) => {
       Alert.alert('Anexar foto', 'Galeria ou câmera?', [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -101,17 +108,19 @@ export default function ProcedimentosPromotoresScreen() {
     [requestPermissions, pickImage]
   );
 
-  const removePhoto = (itemId: PhotoIds, index: number) => {
+  const removePhoto = (itemId: string, index: number) => {
     setPhotos((prev) => ({
       ...prev,
       [itemId]: prev[itemId].filter((_, i) => i !== index),
     }));
   };
 
-  const concluidosCount = CHECKLIST_PROMOTOR_11.filter((i) => concluidos[i.id]).length;
-  const allChecked = concluidosCount === 11;
-  const photoItemsOk =
-    photos.abertura.length >= 1 && photos.reabertura.length >= 1 && photos.manter.length >= 1;
+  const totalItens = checklist.length;
+  const concluidosCount = checklist.filter((i) => concluidos[i.id]).length;
+  const allChecked = totalItens > 0 && concluidosCount === totalItens;
+  const photoItemsOk = checklist
+    .filter((i) => i.requiresPhoto)
+    .every((i) => (photos[i.id]?.length ?? 0) >= 1);
   const canSubmit = allChecked && photoItemsOk;
 
   const handleEnviar = async () => {
@@ -125,7 +134,7 @@ export default function ProcedimentosPromotoresScreen() {
         tipo: 'promotor',
         lojaId: loja.id,
         usuarioId: user.id,
-        itens: CHECKLIST_PROMOTOR_11.map((i) => ({
+        itens: checklist.map((i) => ({
           id: i.id,
           label: i.label,
           concluido: !!concluidos[i.id],
@@ -135,7 +144,11 @@ export default function ProcedimentosPromotoresScreen() {
       });
       Alert.alert('Procedimento enviado', 'Seu checklist foi registrado com sucesso.', [{ text: 'OK' }]);
       setConcluidos({});
-      setPhotos({ abertura: [], reabertura: [], manter: [] });
+      const resetPhotos: Record<string, string[]> = {};
+      checklist.filter((i) => i.requiresPhoto).forEach((i) => {
+        resetPhotos[i.id] = [];
+      });
+      setPhotos(resetPhotos);
       setLoja(null);
     } catch (e) {
       Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível enviar.');
@@ -182,16 +195,26 @@ export default function ProcedimentosPromotoresScreen() {
       </Modal>
 
       <View style={styles.progress}>
-        <Text style={styles.progressText}>{concluidosCount} de 11 itens concluídos</Text>
+        <Text style={styles.progressText}>
+          {concluidosCount} de {totalItens} itens concluídos
+        </Text>
         <View style={[styles.barBg, { borderRadius: borderRadius.full }]}>
-          <View style={[styles.barFill, { width: `${(concluidosCount / 11) * 100}%`, borderRadius: borderRadius.full }]} />
+          <View
+            style={[
+              styles.barFill,
+              {
+                width: `${totalItens ? (concluidosCount / totalItens) * 100 : 0}%`,
+                borderRadius: borderRadius.full,
+              },
+            ]}
+          />
         </View>
       </View>
 
       <View style={styles.card}>
-        {CHECKLIST_PROMOTOR_11.map((item) => {
+        {checklist.map((item) => {
           const checked = concluidos[item.id];
-          const itemPhotos = item.requiresPhoto ? photos[item.id as PhotoIds] : [];
+          const itemPhotos = item.requiresPhoto ? photos[item.id] ?? [] : [];
           return (
             <View key={item.id} style={styles.rowWrap}>
               <TouchableOpacity
@@ -213,7 +236,7 @@ export default function ProcedimentosPromotoresScreen() {
                           <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
                           <TouchableOpacity
                             style={styles.thumbRemove}
-                            onPress={() => removePhoto(item.id as PhotoIds, idx)}
+                            onPress={() => removePhoto(item.id, idx)}
                           >
                             <Text style={styles.thumbRemoveText}>×</Text>
                           </TouchableOpacity>
@@ -228,7 +251,7 @@ export default function ProcedimentosPromotoresScreen() {
                   )}
                   <TouchableOpacity
                     style={styles.photoBtn}
-                    onPress={() => handleAddPhoto(item.id as PhotoIds)}
+                    onPress={() => handleAddPhoto(item.id)}
                   >
                     <ImagePlus size={18} color={colors.primary} />
                     <Text style={styles.photoBtnText}>

@@ -5,7 +5,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
 import { colors, spacing } from '../theme';
 import HeaderLogout from './HeaderLogout';
-import HeaderNotification from './HeaderNotification';
+
+/** Notificações ocultas na v1 — ver mobile/V1-SCOPE.md */
 
 const HEADER_BAR_HEIGHT = 56;
 
@@ -32,9 +33,7 @@ export default function CustomHeader() {
             <HeaderLogout />
           ) : null}
         </View>
-        <View style={styles.right}>
-          <HeaderNotification count={3} />
-        </View>
+        <View style={styles.right} />
       </View>
     </View>
   );

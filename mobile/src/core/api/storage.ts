@@ -1,5 +1,17 @@
 import { supabase, isSupabaseConfigured } from '../supabase/client';
 
+async function uploadOnce(
+  bucket: 'canhotos-fotos' | 'procedimentos-fotos',
+  filePath: string,
+  blob: Blob
+): Promise<void> {
+  const { error } = await supabase.storage.from(bucket).upload(filePath, blob, {
+    contentType: blob.type || 'image/jpeg',
+    upsert: true,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function uploadImage(
   bucket: 'canhotos-fotos' | 'procedimentos-fotos',
   path: string,
@@ -12,12 +24,17 @@ export async function uploadImage(
   const ext = localUri.split('.').pop()?.split('?')[0] ?? 'jpg';
   const filePath = `${path}.${ext}`;
 
-  const { error } = await supabase.storage.from(bucket).upload(filePath, blob, {
-    contentType: blob.type || 'image/jpeg',
-    upsert: true,
-  });
+  try {
+    await uploadOnce(bucket, filePath, blob);
+  } catch (firstError) {
+    await new Promise((r) => setTimeout(r, 800));
+    try {
+      await uploadOnce(bucket, filePath, blob);
+    } catch {
+      throw firstError instanceof Error ? firstError : new Error('Falha no upload da imagem');
+    }
+  }
 
-  if (error) throw new Error(error.message);
   return filePath;
 }
 

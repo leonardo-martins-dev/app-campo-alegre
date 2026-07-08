@@ -16,12 +16,17 @@ import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 import { ChevronDown } from 'lucide-react-native';
 import { useAuth } from '../../core/auth/AuthContext';
 import { fetchLojasAtivas } from '../../core/api/lojas';
-import { enviarProcedimento } from '../../core/api/procedimentos';
+import { enviarProcedimento, fetchChecklistTemplate } from '../../core/api/procedimentos';
 import type { Loja } from '../../shared/mock/data';
+
+type QuebraItem = { id: string; label: string; concluido: boolean; requiresPhoto?: boolean };
+
+const defaultQuebraItens = (): QuebraItem[] =>
+  MOCK_CHECKLIST_QUEBRA.map((i) => ({ ...i, requiresPhoto: i.id === '3' }));
 
 export default function ProcedimentoQuebraScreen() {
   const { user } = useAuth();
-  const [itens, setItens] = useState(MOCK_CHECKLIST_QUEBRA);
+  const [itens, setItens] = useState<QuebraItem[]>(defaultQuebraItens);
   const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
   const [lojaModalVisible, setLojaModalVisible] = useState(false);
@@ -29,6 +34,18 @@ export default function ProcedimentoQuebraScreen() {
 
   useEffect(() => {
     fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
+    fetchChecklistTemplate('quebra')
+      .then((template) => {
+        setItens(
+          template.map((i) => ({
+            id: i.id,
+            label: i.label,
+            concluido: false,
+            requiresPhoto: i.requiresPhoto,
+          }))
+        );
+      })
+      .catch(() => setItens(defaultQuebraItens()));
   }, []);
 
   const toggle = (id: string) => {
@@ -50,12 +67,12 @@ export default function ProcedimentoQuebraScreen() {
           id: i.id,
           label: i.label,
           concluido: i.concluido,
-          requiresPhoto: i.id === '3',
+          requiresPhoto: !!i.requiresPhoto,
         })),
         fotos: {},
       });
       Alert.alert('Enviado', 'Procedimento de quebra registrado.');
-      setItens(MOCK_CHECKLIST_QUEBRA);
+      setItens((prev) => prev.map((i) => ({ ...i, concluido: false })));
       setLoja(null);
     } catch (e) {
       Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível enviar.');

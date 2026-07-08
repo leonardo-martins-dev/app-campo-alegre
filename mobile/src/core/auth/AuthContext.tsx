@@ -62,6 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, senha: string) => {
     if (!isSupabaseConfigured) {
+      if (!__DEV__) {
+        return {
+          success: false,
+          error: 'Servidor não configurado. Use a versão oficial do app.',
+        };
+      }
       const found = findMockUser(email, senha);
       if (!found) {
         return { success: false, error: 'E-mail ou senha inválidos.' };

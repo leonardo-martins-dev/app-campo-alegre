@@ -32,19 +32,31 @@ export default function ConferenciaScreen({ navigation }: Props) {
   const { user } = useAuth();
   const role = user?.nivelAcesso ?? 'colaborador';
   const isColaborador = role === 'colaborador';
-  const isSupervisor = role === 'supervisor';
+  const isResumoPorLoja = role === 'supervisor' || role === 'administracao' || role === 'admin';
   const podeEnviarCanhoto = role !== 'administracao';
 
   const [canhotos, setCanhotos] = useState<Canhoto[]>([]);
   const [resumo, setResumo] = useState<ConferenciaItem[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoadError(null);
     if (isColaborador) {
-      fetchCanhotos(user?.id).then(setCanhotos).catch(() => setCanhotos([]));
-    } else if (isSupervisor || role === 'admin') {
-      fetchResumoConferenciaPorLoja().then(setResumo).catch(() => setResumo([]));
+      fetchCanhotos(user?.id)
+        .then(setCanhotos)
+        .catch(() => {
+          setCanhotos([]);
+          setLoadError('Não foi possível carregar os canhotos. Verifique sua conexão.');
+        });
+    } else if (isResumoPorLoja) {
+      fetchResumoConferenciaPorLoja()
+        .then(setResumo)
+        .catch(() => {
+          setResumo([]);
+          setLoadError('Não foi possível carregar o resumo. Verifique sua conexão.');
+        });
     }
-  }, [isColaborador, isSupervisor, role, user?.id]);
+  }, [isColaborador, isResumoPorLoja, user?.id]);
 
   const ultimosEnviados = canhotos.filter((c) => c.status === 'enviado' || c.status === 'aprovado');
   const pendentes = canhotos.filter((c) => c.status === 'pendente');
@@ -61,6 +73,8 @@ export default function ConferenciaScreen({ navigation }: Props) {
           <Text style={styles.enviarBtnText}>Enviar canhoto</Text>
         </TouchableOpacity>
       )}
+
+      {loadError && <Text style={styles.error}>{loadError}</Text>}
 
       {isColaborador ? (
         <>
@@ -105,7 +119,7 @@ export default function ConferenciaScreen({ navigation }: Props) {
       ) : (
         <>
           <SectionTitle>Resumo por loja</SectionTitle>
-          <Text style={styles.hint}>Toque em uma loja para conferir canhotos (supervisor).</Text>
+          <Text style={styles.hint}>Toque em uma loja para ver canhotos enviados e pendentes.</Text>
           {resumo.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -174,4 +188,5 @@ const styles = StyleSheet.create({
   statLabel: { ...typography.small, color: colors.textSecondary, marginTop: 2 },
   updated: { ...typography.small, color: colors.textSecondary, marginTop: spacing.md },
   hint: { ...typography.small, color: colors.textSecondary, marginBottom: spacing.sm },
+  error: { ...typography.small, color: colors.error, marginBottom: spacing.sm },
 });

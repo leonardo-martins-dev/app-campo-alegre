@@ -6,8 +6,8 @@ export type TabName = 'Inicio' | 'Canhotos' | 'Procedimentos' | 'Gestao' | 'Mais
 export const TABS_BY_ROLE: Record<NivelAcesso, TabName[]> = {
   colaborador: ['Inicio', 'Canhotos', 'Procedimentos'],
   supervisor: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao'],
-  administracao: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao', 'Mais'],
-  admin: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao', 'Mais'],
+  administracao: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao'],
+  admin: ['Inicio', 'Canhotos', 'Procedimentos', 'Gestao'],
 };
 
 export const TAB_LABELS: Record<TabName, string> = {

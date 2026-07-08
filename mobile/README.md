@@ -19,6 +19,8 @@ Parte do monorepo [`campo-alegre`](../). Painel web e SQL do backend ficam nas p
 - Painel web: [../web/README.md](../web/README.md)
 - Setup Supabase: [SETUP-SUPABASE.md](./SETUP-SUPABASE.md)
 - Build iOS: [EAS-BUILD.md](./EAS-BUILD.md)
+- Escopo v1: [V1-SCOPE.md](./V1-SCOPE.md)
+- Checklists deploy: [SUPABASE-PROD-CHECKLIST.md](./SUPABASE-PROD-CHECKLIST.md), [WEB-DEPLOY-CHECKLIST.md](./WEB-DEPLOY-CHECKLIST.md), [QA-TESTFLIGHT.md](./QA-TESTFLIGHT.md), [APP-STORE-SUBMIT.md](./APP-STORE-SUBMIT.md)
 
 ## Backend do app
 
@@ -29,7 +31,7 @@ cp .env.example .env
 # EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY
 ```
 
-Sem `.env`, o app usa dados mock para desenvolvimento offline.
+Sem `.env`, o app usa dados mock **apenas em desenvolvimento** (`__DEV__`). Builds de produção exigem Supabase configurado via EAS secrets.
 
 ## Como rodar
 
