@@ -40,10 +40,11 @@ npm install
 npx expo start
 ```
 
-## Níveis e telas
+## Níveis e telas (v1)
 
-- **Colaborador**: Lançamento canhoto, Conferência, Procedimentos promotores, Procedimento quebra
-- **Supervisor**: + Conferência por loja, visualizações
-- **Admin**: Dashboard, gestão (mobile), todas as telas
+- **Colaborador**: Lançamento canhoto, Conferência
+- **Supervisor**: + Conferência por loja, Gestão de usuários (leitura)
+- **Administração**: Conferência por loja, Gestão de usuários (leitura)
+- **Admin**: Dashboard, Gestão de lojas, Visualização unificada de canhotos
 
-Configuração de menus: `src/core/config/actionsConfig.ts`
+Escopo completo: [V1-SCOPE.md](./V1-SCOPE.md). Configuração de menus: `src/core/config/actionsConfig.ts`
