@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import { Alert } from '@/components/ui/Alert';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -30,33 +34,35 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleLogin} className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-4">
-      <h1 className="text-2xl font-bold text-sky-700 text-center">Campo Alegre</h1>
-      <p className="text-sm text-slate-500 text-center">Painel de administração</p>
-      <input
-        type="email"
-        placeholder="E-mail"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full border rounded-lg px-3 py-2"
-        required
-      />
-      <input
-        type="password"
-        placeholder="Senha"
-        value={senha}
-        onChange={(e) => setSenha(e.target.value)}
-        className="w-full border rounded-lg px-3 py-2"
-        required
-      />
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-sky-600 text-white py-2 rounded-lg font-medium hover:bg-sky-700 disabled:opacity-60"
-      >
-        {loading ? 'Entrando...' : 'Entrar'}
-      </button>
+    <form onSubmit={handleLogin} className="space-y-5">
+      <div className="space-y-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="senha">Senha</Label>
+        <Input
+          id="senha"
+          type="password"
+          placeholder="••••••••"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          required
+          autoComplete="current-password"
+        />
+      </div>
+      {error && <Alert variant="error">{error}</Alert>}
+      <Button type="submit" className="w-full" size="lg" loading={loading}>
+        Entrar
+      </Button>
     </form>
   );
 }

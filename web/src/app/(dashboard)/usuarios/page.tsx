@@ -1,8 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { UserPlus, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { NivelAcesso } from '@/lib/types';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import { Select } from '@/components/ui/Select';
+import { Badge, statusBadgeVariant } from '@/components/ui/Badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Dialog } from '@/components/ui/Dialog';
 
 interface UsuarioRow {
   id: string;
@@ -36,8 +48,8 @@ export default function UsuariosPage() {
   const [nome, setNome] = useState('');
   const [nivel, setNivel] = useState<NivelAcesso>('colaborador');
   const [lojaId, setLojaId] = useState('');
-  const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [confirmUser, setConfirmUser] = useState<UsuarioRow | null>(null);
 
   const load = useCallback(async () => {
     const [u, c, l] = await Promise.all([
@@ -57,7 +69,6 @@ export default function UsuariosPage() {
   const enviarConvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMsg('');
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/invite-user`, {
       method: 'POST',
@@ -75,9 +86,9 @@ export default function UsuariosPage() {
     });
     const json = await res.json();
     if (!res.ok) {
-      setMsg(json.error ?? 'Erro ao enviar convite.');
+      toast.error(json.error ?? 'Erro ao enviar convite.');
     } else {
-      setMsg(`Convite enviado para ${email}`);
+      toast.success(`Convite enviado para ${email}`);
       setEmail('');
       setNome('');
       load();
@@ -85,127 +96,151 @@ export default function UsuariosPage() {
     setLoading(false);
   };
 
-  const toggleAtivo = async (id: string, ativo: boolean) => {
-    await supabase.from('profiles').update({ ativo: !ativo }).eq('id', id);
+  const toggleAtivo = async () => {
+    if (!confirmUser) return;
+    await supabase.from('profiles').update({ ativo: !confirmUser.ativo }).eq('id', confirmUser.id);
+    toast.success(confirmUser.ativo ? 'Usuário desativado' : 'Usuário reativado');
+    setConfirmUser(null);
     load();
   };
 
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold">Gestão de usuários</h2>
+      <PageHeader
+        title="Gestão de usuários"
+        description="Convide novos membros e gerencie acessos"
+      />
 
-      <form onSubmit={enviarConvite} className="bg-white rounded-lg shadow-sm border p-6 space-y-4 max-w-xl">
-        <h3 className="font-semibold">Convidar usuário</h3>
-        <p className="text-sm text-slate-600">O usuário receberá um e-mail com link para definir a senha.</p>
-        <input
-          type="text"
-          placeholder="Nome completo"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2"
-          required
-        />
-        <input
-          type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2"
-          required
-        />
-        <select
-          value={nivel}
-          onChange={(e) => setNivel(e.target.value as NivelAcesso)}
-          className="w-full border rounded-lg px-3 py-2"
-        >
-          <option value="colaborador">Colaborador</option>
-          <option value="supervisor">Supervisor</option>
-          <option value="administracao">Administração</option>
-          <option value="admin">Admin</option>
-        </select>
-        {['colaborador', 'supervisor'].includes(nivel) && (
-          <select
-            value={lojaId}
-            onChange={(e) => setLojaId(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-            required
-          >
-            <option value="">Selecione a loja</option>
-            {lojas.map((l) => (
-              <option key={l.id} value={l.id}>{l.nome}</option>
-            ))}
-          </select>
-        )}
-        {msg && <p className="text-sm text-sky-700">{msg}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-sky-600 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-60"
-        >
-          {loading ? 'Enviando...' : 'Enviar convite'}
-        </button>
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-primary" />
+            Convidar usuário
+          </CardTitle>
+          <CardDescription>
+            O usuário receberá um e-mail com link para definir a senha.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={enviarConvite} className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome completo</Label>
+              <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nivel">Nível de acesso</Label>
+              <Select id="nivel" value={nivel} onChange={(e) => setNivel(e.target.value as NivelAcesso)}>
+                <option value="colaborador">Colaborador</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="administracao">Administração</option>
+                <option value="admin">Admin</option>
+              </Select>
+            </div>
+            {['colaborador', 'supervisor'].includes(nivel) && (
+              <div className="space-y-2">
+                <Label htmlFor="loja">Loja</Label>
+                <Select id="loja" value={lojaId} onChange={(e) => setLojaId(e.target.value)} required>
+                  <option value="">Selecione a loja</option>
+                  {lojas.map((l) => (
+                    <option key={l.id} value={l.id}>{l.nome}</option>
+                  ))}
+                </Select>
+              </div>
+            )}
+            <div className="sm:col-span-2">
+              <Button type="submit" loading={loading}>
+                Enviar convite
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div>
-        <h3 className="font-semibold mb-3">Usuários cadastrados</h3>
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="text-left p-3">Nome</th>
-                <th className="text-left p-3">E-mail</th>
-                <th className="text-left p-3">Nível</th>
-                <th className="text-left p-3">Loja</th>
-                <th className="text-left p-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div className="space-y-3">
+        <h3 className="text-base font-semibold text-slate-900">Usuários cadastrados</h3>
+        {usuarios.length === 0 ? (
+          <EmptyState icon={Users} title="Nenhum usuário cadastrado" />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Nível</TableHead>
+                <TableHead>Loja</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {usuarios.map((u) => (
-                <tr key={u.id} className="border-t">
-                  <td className="p-3">{u.nome}</td>
-                  <td className="p-3">{u.email}</td>
-                  <td className="p-3">{u.nivel_acesso}</td>
-                  <td className="p-3">{u.lojas?.nome ?? '—'}</td>
-                  <td className="p-3">
-                    <button
-                      onClick={() => toggleAtivo(u.id, u.ativo)}
-                      className={`text-xs px-2 py-1 rounded ${u.ativo ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100'}`}
-                    >
-                      {u.ativo ? 'Ativo' : 'Inativo'}
+                <TableRow key={u.id}>
+                  <TableCell className="font-medium">{u.nome}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>
+                    <Badge variant="primary">{u.nivel_acesso}</Badge>
+                  </TableCell>
+                  <TableCell>{u.lojas?.nome ?? '—'}</TableCell>
+                  <TableCell>
+                    <button onClick={() => setConfirmUser(u)}>
+                      <Badge variant={u.ativo ? 'success' : 'muted'}>
+                        {u.ativo ? 'Ativo' : 'Inativo'}
+                      </Badge>
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        )}
       </div>
 
-      <div>
-        <h3 className="font-semibold mb-3">Convites</h3>
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="text-left p-3">E-mail</th>
-                <th className="text-left p-3">Nome</th>
-                <th className="text-left p-3">Nível</th>
-                <th className="text-left p-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
+      <div className="space-y-3">
+        <h3 className="text-base font-semibold text-slate-900">Convites</h3>
+        {convites.length === 0 ? (
+          <EmptyState icon={UserPlus} title="Nenhum convite pendente" />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Nível</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {convites.map((c) => (
-                <tr key={c.id} className="border-t">
-                  <td className="p-3">{c.email}</td>
-                  <td className="p-3">{c.nome}</td>
-                  <td className="p-3">{c.nivel_acesso}</td>
-                  <td className="p-3">{c.status}</td>
-                </tr>
+                <TableRow key={c.id}>
+                  <TableCell>{c.email}</TableCell>
+                  <TableCell>{c.nome}</TableCell>
+                  <TableCell>{c.nivel_acesso}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusBadgeVariant(c.status)}>{c.status}</Badge>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        )}
       </div>
+
+      <Dialog
+        open={!!confirmUser}
+        onClose={() => setConfirmUser(null)}
+        title={confirmUser?.ativo ? 'Desativar usuário?' : 'Reativar usuário?'}
+        description={
+          confirmUser?.ativo
+            ? `${confirmUser.nome} perderá acesso ao sistema.`
+            : `${confirmUser?.nome} voltará a ter acesso ao sistema.`
+        }
+        confirmLabel={confirmUser?.ativo ? 'Desativar' : 'Reativar'}
+        confirmVariant={confirmUser?.ativo ? 'destructive' : 'primary'}
+        onConfirm={toggleAtivo}
+      />
     </div>
   );
 }

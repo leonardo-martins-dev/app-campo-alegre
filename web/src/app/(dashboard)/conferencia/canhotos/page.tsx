@@ -1,7 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { ClipboardCheck, ZoomIn } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge, statusBadgeVariant } from '@/components/ui/Badge';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Lightbox } from '@/components/ui/Lightbox';
 
 interface CanhotoRow {
   id: string;
@@ -13,12 +23,21 @@ interface CanhotoRow {
   profiles: { nome: string } | null;
 }
 
+const FILTROS = [
+  { value: 'enviado', label: 'Enviados' },
+  { value: 'divergente', label: 'Divergentes' },
+  { value: 'pendente', label: 'Pendentes' },
+  { value: 'aprovado', label: 'Aprovados' },
+];
+
 export default function ConferenciaCanhotosPage() {
   const supabase = createClient();
   const [lista, setLista] = useState<CanhotoRow[]>([]);
   const [filtro, setFiltro] = useState('enviado');
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    setLoading(true);
     let q = supabase
       .from('canhotos')
       .select('id, numero, status, foto_path, observacoes, lojas(nome), profiles(nome)')
@@ -26,6 +45,7 @@ export default function ConferenciaCanhotosPage() {
     if (filtro) q = q.eq('status', filtro);
     const { data } = await q;
     setLista((data as unknown as CanhotoRow[]) ?? []);
+    setLoading(false);
   }, [supabase, filtro]);
 
   useEffect(() => {
@@ -57,6 +77,9 @@ export default function ConferenciaCanhotosPage() {
         });
       }
     }
+    toast.success(
+      status === 'aprovado' ? 'Canhoto aprovado' : status === 'divergente' ? 'Divergência registrada' : 'Canhoto rejeitado'
+    );
     load();
   };
 
@@ -67,18 +90,38 @@ export default function ConferenciaCanhotosPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Conferência de canhotos</h2>
-      <select value={filtro} onChange={(e) => setFiltro(e.target.value)} className="border rounded px-3 py-2">
-        <option value="enviado">Enviados</option>
-        <option value="divergente">Divergentes</option>
-        <option value="pendente">Pendentes</option>
-        <option value="aprovado">Aprovados</option>
-      </select>
+      <PageHeader
+        title="Conferência de canhotos"
+        description="Revise e aprove canhotos enviados pelo app"
+      />
+
+      <SegmentedControl options={FILTROS} value={filtro} onChange={setFiltro} />
+
       <div className="space-y-4">
-        {lista.map((c) => (
-          <CanhotoCard key={c.id} item={c} onConferir={conferir} getFoto={fotoUrl} />
-        ))}
-        {lista.length === 0 && <p className="text-slate-500">Nenhum canhoto neste filtro.</p>}
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-6 flex gap-4">
+                <Skeleton className="h-40 w-40 shrink-0 rounded-xl" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-8 w-64" />
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : lista.length === 0 ? (
+          <EmptyState
+            icon={ClipboardCheck}
+            title="Nenhum canhoto neste filtro"
+            description="Altere o filtro acima para ver outros registros."
+          />
+        ) : (
+          lista.map((c) => (
+            <CanhotoCard key={c.id} item={c} onConferir={conferir} getFoto={fotoUrl} />
+          ))
+        )}
       </div>
     </div>
   );
@@ -94,25 +137,78 @@ function CanhotoCard({
   getFoto: (p: string) => Promise<string | undefined>;
 }) {
   const [url, setUrl] = useState<string | null>(null);
+  const [loadingFoto, setLoadingFoto] = useState(!!item.foto_path);
+  const [lightbox, setLightbox] = useState(false);
+
   useEffect(() => {
-    if (item.foto_path) getFoto(item.foto_path).then((u) => setUrl(u ?? null));
+    if (!item.foto_path) return;
+    setLoadingFoto(true);
+    getFoto(item.foto_path).then((u) => {
+      setUrl(u ?? null);
+      setLoadingFoto(false);
+    });
   }, [item.foto_path, getFoto]);
 
+  const canConferir = item.status === 'enviado' || item.status === 'divergente';
+
   return (
-    <div className="bg-white border rounded-lg p-4 flex gap-4">
-      {url && <img src={url} alt="Canhoto" className="w-32 h-32 object-cover rounded" />}
-      <div className="flex-1">
-        <p className="font-semibold">#{item.numero}</p>
-        <p className="text-sm text-slate-600">{item.lojas?.nome} · {item.profiles?.nome}</p>
-        <p className="text-sm">Status: {item.status}</p>
-        {item.status === 'enviado' || item.status === 'divergente' ? (
-          <div className="flex gap-2 mt-3">
-            <button onClick={() => onConferir(item.id, 'aprovado')} className="bg-emerald-600 text-white text-sm px-3 py-1 rounded">Aprovar</button>
-            <button onClick={() => onConferir(item.id, 'divergente')} className="bg-amber-500 text-white text-sm px-3 py-1 rounded">Divergência</button>
-            <button onClick={() => onConferir(item.id, 'rejeitado')} className="bg-red-600 text-white text-sm px-3 py-1 rounded">Rejeitar</button>
+    <>
+      <Card className="overflow-hidden">
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="relative shrink-0">
+              {loadingFoto ? (
+                <Skeleton className="h-40 w-full sm:w-48 rounded-xl" />
+              ) : url ? (
+                <button
+                  onClick={() => setLightbox(true)}
+                  className="group relative block overflow-hidden rounded-xl"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`Canhoto ${item.numero}`} className="h-40 w-full sm:w-48 object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 transition-all group-hover:bg-slate-900/30">
+                    <ZoomIn className="h-6 w-6 text-white opacity-0 transition-opacity group-hover:opacity-100" />
+                  </div>
+                </button>
+              ) : (
+                <div className="flex h-40 w-full sm:w-48 items-center justify-center rounded-xl bg-slate-100 text-sm text-slate-400">
+                  Sem foto
+                </div>
+              )}
+            </div>
+            <div className="flex flex-1 flex-col">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-lg font-semibold text-slate-900">#{item.numero}</p>
+                  <p className="text-sm text-slate-500">
+                    {item.lojas?.nome} · {item.profiles?.nome}
+                  </p>
+                </div>
+                <Badge variant={statusBadgeVariant(item.status)}>{item.status}</Badge>
+              </div>
+              {item.observacoes && (
+                <p className="mt-2 text-sm text-slate-600">{item.observacoes}</p>
+              )}
+              {canConferir && (
+                <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                  <Button size="sm" variant="success" onClick={() => onConferir(item.id, 'aprovado')}>
+                    Aprovar
+                  </Button>
+                  <Button size="sm" variant="warning" onClick={() => onConferir(item.id, 'divergente')}>
+                    Divergência
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => onConferir(item.id, 'rejeitado')}>
+                    Rejeitar
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        ) : null}
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+      {lightbox && url && (
+        <Lightbox src={url} alt={`Canhoto ${item.numero}`} onClose={() => setLightbox(false)} />
+      )}
+    </>
   );
 }

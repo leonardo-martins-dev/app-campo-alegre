@@ -1,21 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { FileUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Dropzone } from '@/components/ui/Dropzone';
+import { Alert } from '@/components/ui/Alert';
+import { Progress } from '@/components/ui/Progress';
 
 export default function UploadSistemaPage() {
   const supabase = createClient();
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const processar = async (file: File) => {
     setLoading(true);
     setMsg('');
+    setProgress(10);
     const text = await file.text();
     const lines = text.split(/\r?\n/).filter(Boolean);
     if (lines.length < 2) {
-      setMsg('Arquivo vazio ou sem dados.');
+      toast.error('Arquivo vazio ou sem dados.');
       setLoading(false);
+      setProgress(0);
       return;
     }
     const headers = lines[0].split(/[,;]/).map((h) => h.trim().toLowerCase());
@@ -28,6 +38,7 @@ export default function UploadSistemaPage() {
     const lojaMap = new Map((lojas ?? []).map((l) => [l.nome.toLowerCase(), l.id]));
 
     let inseridos = 0;
+    const total = lines.length - 1;
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(/[,;]/);
       const numero = cols[numeroIdx >= 0 ? numeroIdx : 0]?.trim();
@@ -48,27 +59,49 @@ export default function UploadSistemaPage() {
         { onConflict: 'numero,loja_id' }
       );
       if (!error) inseridos++;
+      setProgress(10 + Math.round((i / total) * 90));
     }
-    setMsg(`${inseridos} registros importados em canhotos_sistema.`);
+    const result = `${inseridos} registros importados em canhotos_sistema.`;
+    setMsg(result);
+    toast.success(result);
     setLoading(false);
+    setTimeout(() => setProgress(0), 1000);
   };
 
   return (
-    <div className="space-y-6 max-w-xl">
-      <h2 className="text-2xl font-bold">Upload do sistema</h2>
-      <p className="text-sm text-slate-600">
-        Importe CSV com colunas: numero, loja (nome), nfe (opcional), total (opcional).
-        Para XLSX, exporte como CSV antes do upload.
-      </p>
-      <input
-        type="file"
-        accept=".csv,.txt"
-        onChange={(e) => e.target.files?.[0] && processar(e.target.files[0])}
-        disabled={loading}
-        className="block w-full text-sm"
+    <div className="space-y-8 max-w-2xl">
+      <PageHeader
+        title="Upload do sistema"
+        description="Importe canhotos do sistema via CSV"
       />
-      {loading && <p>Processando...</p>}
-      {msg && <p className="text-sky-700">{msg}</p>}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileUp className="h-4 w-4 text-primary" />
+            Importar arquivo
+          </CardTitle>
+          <CardDescription>
+            CSV com colunas: numero, loja (nome), nfe (opcional), total (opcional).
+            Para XLSX, exporte como CSV antes do upload.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Dropzone
+            accept=".csv,.txt"
+            disabled={loading}
+            onFile={processar}
+            hint="Formatos aceitos: .csv, .txt"
+          />
+          {loading && (
+            <div className="space-y-2">
+              <p className="text-sm text-slate-500">Processando...</p>
+              <Progress value={progress} />
+            </div>
+          )}
+          {msg && !loading && <Alert variant="success">{msg}</Alert>}
+        </CardContent>
+      </Card>
     </div>
   );
 }

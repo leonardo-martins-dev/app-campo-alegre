@@ -1,7 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { Check, Download, FileSpreadsheet } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Dropzone } from '@/components/ui/Dropzone';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Alert } from '@/components/ui/Alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
+import { cn } from '@/lib/utils';
 
 interface Linha {
   seq_produto: string;
@@ -11,11 +21,14 @@ interface Linha {
   cod_super: string;
 }
 
+const STEPS = ['Importar CSV', 'Vincular códigos', 'Concluído'];
+
 export default function ImportadorPage() {
   const supabase = createClient();
   const [step, setStep] = useState(1);
   const [linhas, setLinhas] = useState<Linha[]>([]);
   const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const importar = async (file: File) => {
     const text = await file.text();
@@ -32,11 +45,16 @@ export default function ImportadorPage() {
     });
     setLinhas(parsed);
     setStep(2);
+    toast.success(`${parsed.length} linhas importadas`);
   };
 
   const salvar = async () => {
+    setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setSaving(false);
+      return;
+    }
 
     const { data: imp, error } = await supabase
       .from('importacoes_pedidos')
@@ -50,7 +68,9 @@ export default function ImportadorPage() {
       .single();
 
     if (error) {
+      toast.error('Execute optional/011_importador_linker.sql no Supabase para habilitar o importador.');
       setMsg('Execute optional/011_importador_linker.sql no Supabase para habilitar o importador.');
+      setSaving(false);
       return;
     }
 
@@ -64,8 +84,10 @@ export default function ImportadorPage() {
         cod_super: l.cod_super || null,
       }))
     );
-    setMsg('Importação salva. Exporte os dados pela API ou adicione export CSV em versão futura.');
+    setMsg('Importação salva com sucesso.');
+    toast.success('Importação salva');
     setStep(3);
+    setSaving(false);
   };
 
   const exportarCsv = () => {
@@ -78,71 +100,139 @@ export default function ImportadorPage() {
     a.href = URL.createObjectURL(blob);
     a.download = 'pedidos_vinculados.csv';
     a.click();
+    toast.success('CSV exportado');
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <h2 className="text-2xl font-bold">Importador de pedidos (Linker)</h2>
+    <div className="space-y-8 max-w-4xl">
+      <PageHeader
+        title="Importador de pedidos"
+        description="Linker — importe e vincule códigos de produtos"
+      />
+
+      {/* Stepper */}
+      <div className="flex items-center gap-2">
+        {STEPS.map((label, i) => {
+          const num = i + 1;
+          const active = step === num;
+          const done = step > num;
+          return (
+            <div key={label} className="flex items-center gap-2">
+              {i > 0 && <div className={cn('h-px w-8', done ? 'bg-primary' : 'bg-slate-200')} />}
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all',
+                    active && 'bg-primary text-white',
+                    done && 'bg-primary/10 text-primary',
+                    !active && !done && 'bg-slate-100 text-slate-400'
+                  )}
+                >
+                  {done ? <Check className="h-4 w-4" /> : num}
+                </div>
+                <span className={cn('text-sm hidden sm:inline', active ? 'font-medium text-slate-900' : 'text-slate-500')}>
+                  {label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {step === 1 && (
-        <div className="bg-white border rounded-lg p-6 space-y-4">
-          <p className="text-sm text-slate-600">Passo 1: importar CSV (NRO_EMPRESA, SEQPRODUTO, DESCCOMPLETA, QTD_SOLICITADA)</p>
-          <input type="file" accept=".csv" onChange={(e) => e.target.files?.[0] && importar(e.target.files[0])} />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-4 w-4 text-primary" />
+              Passo 1 — Importar CSV
+            </CardTitle>
+            <CardDescription>
+              Colunas esperadas: NRO_EMPRESA, SEQPRODUTO, DESCCOMPLETA, QTD_SOLICITADA
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Dropzone
+              accept=".csv"
+              onFile={importar}
+              hint="Arraste o arquivo CSV do pedido"
+            />
+          </CardContent>
+        </Card>
       )}
+
       {step === 2 && (
         <div className="space-y-4">
-          <p className="font-medium">Passo 2: vincular códigos</p>
-          <div className="bg-white border rounded-lg overflow-auto max-h-96">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 sticky top-0">
-                <tr>
-                  <th className="p-2 text-left">SEQ</th>
-                  <th className="p-2 text-left">Descrição</th>
-                  <th className="p-2 text-left">COD_PRODUTO</th>
-                  <th className="p-2 text-left">COD_SUPER</th>
-                </tr>
-              </thead>
-              <tbody>
-                {linhas.map((l, i) => (
-                  <tr key={i} className="border-t">
-                    <td className="p-2">{l.seq_produto}</td>
-                    <td className="p-2">{l.desc}</td>
-                    <td className="p-2">
-                      <input
-                        className="border rounded px-1 w-24"
-                        value={l.cod_produto}
-                        onChange={(e) => {
-                          const next = [...linhas];
-                          next[i].cod_produto = e.target.value;
-                          setLinhas(next);
-                        }}
-                      />
-                    </td>
-                    <td className="p-2">
-                      <input
-                        className="border rounded px-1 w-24"
-                        value={l.cod_super}
-                        onChange={(e) => {
-                          const next = [...linhas];
-                          next[i].cod_super = e.target.value;
-                          setLinhas(next);
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <button onClick={salvar} className="bg-sky-600 text-white px-4 py-2 rounded-lg">Salvar e continuar</button>
+          <Card>
+            <CardHeader>
+              <CardTitle>Passo 2 — Vincular códigos</CardTitle>
+              <CardDescription>{linhas.length} itens para vincular</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-96 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>SEQ</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>COD_PRODUTO</TableHead>
+                      <TableHead>COD_SUPER</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {linhas.map((l, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-mono text-xs">{l.seq_produto}</TableCell>
+                        <TableCell className="max-w-xs truncate">{l.desc}</TableCell>
+                        <TableCell>
+                          <Input
+                            className="h-8 w-28"
+                            value={l.cod_produto}
+                            onChange={(e) => {
+                              const next = [...linhas];
+                              next[i].cod_produto = e.target.value;
+                              setLinhas(next);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="h-8 w-28"
+                            value={l.cod_super}
+                            onChange={(e) => {
+                              const next = [...linhas];
+                              next[i].cod_super = e.target.value;
+                              setLinhas(next);
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+          <Button onClick={salvar} loading={saving}>
+            Salvar e continuar
+          </Button>
         </div>
       )}
+
       {step === 3 && (
-        <div className="space-y-4">
-          <p className="text-emerald-700">{msg}</p>
-          <button onClick={exportarCsv} className="bg-sky-600 text-white px-4 py-2 rounded-lg">Exportar CSV</button>
-          <button onClick={() => setStep(1)} className="text-sky-600 text-sm block">Nova importação</button>
-        </div>
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <Alert variant="success">{msg}</Alert>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={exportarCsv}>
+                <Download className="h-4 w-4" />
+                Exportar CSV
+              </Button>
+              <Button variant="secondary" onClick={() => { setStep(1); setLinhas([]); setMsg(''); }}>
+                Nova importação
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
