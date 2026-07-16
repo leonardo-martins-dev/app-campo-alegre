@@ -9,8 +9,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LogOut } from 'lucide-react-native';
 import { useAuth } from '../../core/auth/AuthContext';
-import { colors, spacing, borderRadius } from '../theme';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
 export default function HeaderLogout() {
   const { logout } = useAuth();
@@ -27,13 +28,12 @@ export default function HeaderLogout() {
       <Pressable
         onPress={() => setShowConfirm(true)}
         style={({ pressed }) => [styles.container, pressed && styles.pressed]}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        hitSlop={8}
+        accessibilityLabel="Sair"
       >
         <View style={styles.pill}>
-          <Text
-            style={styles.text}
-            allowFontScaling={false}
-          >
+          <LogOut size={14} color={colors.navy} strokeWidth={2.2} />
+          <Text style={styles.text} allowFontScaling={false}>
             Sair
           </Text>
         </View>
@@ -50,21 +50,19 @@ export default function HeaderLogout() {
           onPress={() => setShowConfirm(false)}
         >
           <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.modalTitle}>Deseja realmente sair?</Text>
-            <Text style={styles.modalSubtitle}>Você precisará fazer login novamente para acessar o app.</Text>
+            <Text style={styles.modalTitle}>Sair da conta?</Text>
+            <Text style={styles.modalSubtitle}>
+              Você precisará entrar novamente para usar o app.
+            </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.btnCancel}
                 onPress={() => setShowConfirm(false)}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
                 <Text style={styles.btnCancelText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.btnLogout}
-                onPress={handleLogout}
-                activeOpacity={0.8}
-              >
+              <TouchableOpacity style={styles.btnLogout} onPress={handleLogout} activeOpacity={0.85}>
                 <Text style={styles.btnLogoutText}>Sair</Text>
               </TouchableOpacity>
             </View>
@@ -77,58 +75,65 @@ export default function HeaderLogout() {
 
 const styles = StyleSheet.create({
   container: {
-    minHeight: 44,
+    minHeight: 40,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   pressed: {
-    opacity: 0.6,
+    opacity: 0.65,
   },
   pill: {
-    backgroundColor: colors.primary + '18',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.surfaceElevated,
     paddingVertical: 8,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 12,
     borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   text: {
-    color: colors.primary,
+    color: colors.navy,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 13,
     ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
   },
   modalCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     padding: spacing.lg,
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
+    ...shadows.card,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.navy,
     marginBottom: spacing.sm,
+    letterSpacing: -0.3,
   },
   modalSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
+    lineHeight: 20,
   },
   modalActions: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
     justifyContent: 'flex-end',
   },
   btnCancel: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: borderRadius.md,
     backgroundColor: colors.surfaceElevated,
   },
@@ -138,14 +143,14 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   btnLogout: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: borderRadius.md,
     backgroundColor: colors.error,
   },
   btnLogoutText: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.surface,
+    color: '#fff',
   },
 });

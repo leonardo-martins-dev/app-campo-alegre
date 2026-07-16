@@ -30,7 +30,7 @@ export const HUB_ACTIONS: HubAction[] = [
     screen: 'LancamentoCanhoto',
     roles: ['colaborador', 'supervisor', 'admin'],
     icon: 'Upload',
-    color: '#0ea5e9',
+    color: '#00AEEF',
   },
   {
     id: 'visualizacao-canhotos',
@@ -39,7 +39,7 @@ export const HUB_ACTIONS: HubAction[] = [
     screen: 'VisualizacaoCanhotos',
     roles: ['admin'],
     icon: 'Eye',
-    color: '#8b5cf6',
+    color: '#0B4467',
   },
   {
     id: 'conferencia',
@@ -48,7 +48,7 @@ export const HUB_ACTIONS: HubAction[] = [
     screen: 'Conferencia',
     roles: ['colaborador', 'supervisor', 'administracao', 'admin'],
     icon: 'ClipboardCheck',
-    color: '#10b981',
+    color: '#059669',
   },
   {
     id: 'gestao-usuarios',
@@ -57,7 +57,7 @@ export const HUB_ACTIONS: HubAction[] = [
     screen: 'GestaoUsuarios',
     roles: ['supervisor', 'administracao'],
     icon: 'Users',
-    color: '#6366f1',
+    color: '#0B4467',
   },
   {
     id: 'gestao-lojas',
@@ -66,7 +66,7 @@ export const HUB_ACTIONS: HubAction[] = [
     screen: 'GestaoLojas',
     roles: ['admin'],
     icon: 'Store',
-    color: '#ec4899',
+    color: '#0090C5',
   },
   {
     id: 'dashboard',
@@ -75,7 +75,7 @@ export const HUB_ACTIONS: HubAction[] = [
     screen: 'Dashboard',
     roles: ['admin'],
     icon: 'BarChart3',
-    color: '#0d9488',
+    color: '#00AEEF',
   },
 ];
 

@@ -12,18 +12,18 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getActionsForRole } from '../../core/config/actionsConfig';
 import { getHubIcon } from '../../shared/icons/HubIcons';
 import { getChecklistColab, setChecklistColab, type ChecklistColab } from '../../core/storage/storage';
-import { colors, spacing, borderRadius, typography } from '../../shared/theme';
-import type { HubAction } from '../../core/config/actionsConfig';
+import { colors, spacing, borderRadius, typography, shadows } from '../../shared/theme';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootStackParamList, MainTabParamList } from '../../app/navigation/types';
 import { SCREEN_TO_TAB } from '../../app/navigation/screenToTabMap';
-import { ClipboardCheck, CheckSquare, AlertTriangle } from 'lucide-react-native';
+import { ClipboardCheck } from 'lucide-react-native';
 
 type Props = {
   navigation: CompositeNavigationProp<
@@ -32,14 +32,7 @@ type Props = {
   >;
 };
 
-const NIVEL_LABEL: Record<string, string> = {
-  colaborador: 'Colaborador',
-  supervisor: 'Supervisor',
-  administracao: 'Administração',
-  admin: 'Admin',
-};
-
-/** Checklist diário para colaborador: id, título, tela, ícone, cor, chave no estado */
+/** Checklist v1 — só canhotos (procedimentos fora do escopo App Store) */
 const COLAB_CHECKLIST_ITEMS = [
   {
     id: 'canhotos',
@@ -47,26 +40,8 @@ const COLAB_CHECKLIST_ITEMS = [
     subtitle: 'Ver situação e enviar seus canhotos',
     screen: 'Conferencia' as keyof RootStackParamList,
     icon: ClipboardCheck,
-    color: '#10b981',
+    color: colors.success,
     key: 'canhotos' as const,
-  },
-  {
-    id: 'procedimento',
-    title: 'Procedimento',
-    subtitle: 'Checklist diário do promotor',
-    screen: 'ProcedimentosPromotores' as keyof RootStackParamList,
-    icon: CheckSquare,
-    color: '#f59e0b',
-    key: 'procedimento' as const,
-  },
-  {
-    id: 'quebra',
-    title: 'Procedimento de quebra',
-    subtitle: 'Registrar quebras e devoluções',
-    screen: 'ProcedimentoQuebra' as keyof RootStackParamList,
-    icon: AlertTriangle,
-    color: '#ef4444',
-    key: 'quebra' as const,
   },
 ];
 
@@ -78,7 +53,7 @@ export default function HubScreen({ navigation }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [checklist, setChecklistState] = useState<ChecklistColab | null>(null);
-  const [confirmKey, setConfirmKey] = useState<'canhotos' | 'procedimento' | 'quebra' | null>(null);
+  const [confirmKey, setConfirmKey] = useState<'canhotos' | null>(null);
   const isColaborador = role === 'colaborador';
 
   const loadChecklist = useCallback(async () => {
@@ -96,13 +71,13 @@ export default function HubScreen({ navigation }: Props) {
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 400,
+      duration: 350,
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
 
   const handleCheckPress = useCallback(
-    (key: 'canhotos' | 'procedimento' | 'quebra') => {
+    (key: 'canhotos') => {
       if (!isColaborador) return;
       if (checklist?.[key]) return;
       setConfirmKey(key);
@@ -117,9 +92,7 @@ export default function HubScreen({ navigation }: Props) {
     setConfirmKey(null);
   }, [confirmKey]);
 
-  const allChecked = Boolean(
-    checklist?.canhotos && checklist?.procedimento && checklist?.quebra
-  );
+  const allChecked = Boolean(checklist?.canhotos);
 
   const handleRegistrarChecklist = useCallback(() => {
     if (!allChecked) return;
@@ -141,8 +114,19 @@ export default function HubScreen({ navigation }: Props) {
     [navigation]
   );
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Bom dia';
+    if (h < 18) return 'Boa tarde';
+    return 'Boa noite';
+  })();
+
   if (isColaborador) {
-    const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const hoje = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
     return (
       <View style={styles.container}>
         <ScrollView
@@ -151,8 +135,14 @@ export default function HubScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View style={{ opacity: fadeAnim }}>
-            <Text style={styles.checklistTitle}>Checklist do dia</Text>
-            <Text style={styles.checklistDate}>{hoje}</Text>
+            <View style={styles.hero}>
+              <Text style={styles.heroEyebrow}>{hoje}</Text>
+              <Text style={styles.heroTitle}>
+                {greeting}
+                {user?.nome ? `, ${user.nome.split(' ')[0]}` : ''}
+              </Text>
+              <Text style={styles.heroSubtitle}>Checklist do dia</Text>
+            </View>
 
             {COLAB_CHECKLIST_ITEMS.map((item) => {
               const checked = checklist?.[item.key] ?? false;
@@ -180,13 +170,14 @@ export default function HubScreen({ navigation }: Props) {
                       {item.title}
                     </Text>
                     <Text style={styles.colabCardSubtitle}>{item.subtitle}</Text>
-                    <View style={[styles.colabCardBadge, { backgroundColor: item.color + '20' }]}>
-                      <Icon size={18} color={item.color} />
+                    <View style={[styles.colabCardBadge, { backgroundColor: item.color + '18' }]}>
+                      <Icon size={16} color={item.color} />
                       <Text style={[styles.colabCardBadgeText, { color: item.color }]}>
-                        {checked ? 'Feito' : 'Tocar para abrir'}
+                        {checked ? 'Concluído' : 'Abrir'}
                       </Text>
                     </View>
                   </View>
+                  <ChevronRight size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               );
             })}
@@ -209,20 +200,20 @@ export default function HubScreen({ navigation }: Props) {
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.modalTitle}>Confirmar conclusão</Text>
               <Text style={styles.modalMessage}>
-                Deseja marcar "{confirmKey ? COLAB_CHECKLIST_ITEMS.find((i) => i.key === confirmKey)?.title : ''}" como concluído? Após confirmar, não será possível desmarcar neste dia.
+                Marcar como concluído? Não será possível desmarcar neste dia.
               </Text>
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.modalBtnCancel}
                   onPress={() => setConfirmKey(null)}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                 >
                   <Text style={styles.modalBtnCancelText}>Cancelar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalBtnConfirm}
                   onPress={handleConfirmCheck}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                 >
                   <Text style={styles.modalBtnConfirmText}>Confirmar</Text>
                 </TouchableOpacity>
@@ -236,13 +227,21 @@ export default function HubScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Módulos disponíveis</Text>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }]}
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={{ opacity: fadeAnim }}>
+          <View style={styles.hero}>
+            <Text style={styles.heroEyebrow}>Módulos</Text>
+            <Text style={styles.heroTitle}>
+              {greeting}
+              {user?.nome ? `, ${user.nome.split(' ')[0]}` : ''}
+            </Text>
+            <Text style={styles.heroSubtitle}>Atalhos para as operações do dia</Text>
+          </View>
+
           {actions.map((action) => {
             const Icon = getHubIcon(action.icon);
             return (
@@ -250,16 +249,18 @@ export default function HubScreen({ navigation }: Props) {
                 key={action.id}
                 style={styles.card}
                 onPress={() => handleOpenScreen(action.screen as keyof RootStackParamList)}
-                activeOpacity={0.85}
+                activeOpacity={0.88}
               >
-                <View style={[styles.iconWrap, { backgroundColor: action.color + '20' }]}>
-                  <Icon size={28} color={action.color} />
+                <View style={[styles.iconWrap, { backgroundColor: action.color + '18' }]}>
+                  <Icon size={22} color={action.color} />
                 </View>
                 <View style={styles.cardBody}>
                   <Text style={styles.cardTitle}>{action.label}</Text>
-                  <Text style={styles.cardDesc}>{action.description}</Text>
+                  <Text style={styles.cardDesc} numberOfLines={2}>
+                    {action.description}
+                  </Text>
                 </View>
-                <View style={styles.arrow} />
+                <ChevronRight size={18} color={colors.textMuted} />
               </TouchableOpacity>
             );
           })}
@@ -274,20 +275,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  sectionTitle: {
-    ...typography.subtitle,
-    color: colors.text,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
+  },
+  hero: {
+    marginBottom: spacing.lg,
+  },
+  heroEyebrow: {
+    ...typography.small,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.4,
+    marginBottom: 6,
+  },
+  heroTitle: {
+    ...typography.title,
+    color: colors.navy,
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   card: {
     flexDirection: 'row',
@@ -296,15 +308,13 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
   },
   iconWrap: {
-    width: 52,
-    height: 52,
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -312,66 +322,44 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     flex: 1,
+    paddingRight: spacing.sm,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.navy,
+    letterSpacing: -0.2,
   },
   cardDesc: {
     fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 2,
-  },
-  arrow: {
-    width: 8,
-    height: 8,
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: colors.textSecondary,
-    transform: [{ rotate: '-45deg' }],
-    marginLeft: spacing.sm,
-  },
-  // Colaborador checklist
-  checklistTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  checklistDate: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
+    marginTop: 3,
+    lineHeight: 18,
   },
   colabCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    padding: spacing.md,
     marginBottom: spacing.md,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    ...shadows.soft,
   },
   colabCardDone: {
-    borderColor: colors.success + '60',
+    borderColor: colors.success + '40',
     backgroundColor: colors.success + '08',
   },
   checkWrap: {
     marginRight: spacing.md,
   },
   checkBig: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    borderWidth: 3,
-    borderColor: colors.border,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -381,16 +369,17 @@ const styles = StyleSheet.create({
   },
   checkBigText: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
   },
   colabCardBody: {
     flex: 1,
   },
   colabCardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.navy,
+    letterSpacing: -0.2,
   },
   colabCardTitleDone: {
     color: colors.textSecondary,
@@ -399,73 +388,72 @@ const styles = StyleSheet.create({
   colabCardSubtitle: {
     ...typography.caption,
     color: colors.textSecondary,
-    marginTop: 4,
+    marginTop: 3,
   },
   colabCardBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
     marginTop: spacing.sm,
-    gap: 4,
+    gap: 5,
   },
   colabCardBadgeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   registrarBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.navy,
     borderRadius: borderRadius.md,
-    padding: spacing.lg,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
+    marginTop: spacing.md,
   },
   registrarBtnDisabled: {
     backgroundColor: colors.surfaceElevated,
-    opacity: 0.7,
   },
   registrarBtnText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#fff',
   },
   registrarBtnTextDisabled: {
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     padding: spacing.lg,
   },
   modalCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     padding: spacing.lg,
+    ...shadows.card,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.navy,
     marginBottom: spacing.sm,
   },
   modalMessage: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 22,
+    lineHeight: 21,
   },
   modalActions: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
     justifyContent: 'flex-end',
   },
   modalBtnCancel: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: borderRadius.md,
     backgroundColor: colors.surfaceElevated,
   },
@@ -475,10 +463,10 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   modalBtnConfirm: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.navy,
   },
   modalBtnConfirmText: {
     fontSize: 15,

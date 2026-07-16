@@ -372,12 +372,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.navy,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: spacing.lg,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16, letterSpacing: -0.2 },
   buttonDisabled: { opacity: 0.7 },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,18 +9,10 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  Easing,
-  FadeInDown,
-  FadeInUp,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from 'react-native-reanimated';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react-native';
 import { useAuth } from '../../core/auth/AuthContext';
 import NoPontoLogo, { NOPONTO } from '../../shared/icons/NoPontoLogo';
@@ -29,6 +21,7 @@ import { spacing } from '../../shared/theme';
 const CREAM = '#F5F0E6';
 const FOREST = '#1B4332';
 const FOREST_MUTED = 'rgba(27, 67, 50, 0.55)';
+const SCREEN_H = Dimensions.get('window').height;
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -40,23 +33,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [senhaFocused, setSenhaFocused] = useState(false);
-
-  const heroOpacity = useSharedValue(0);
-  const formOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    heroOpacity.value = withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) });
-    formOpacity.value = withDelay(
-      180,
-      withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) })
-    );
-  }, [formOpacity, heroOpacity]);
-
-  const heroStyle = useAnimatedStyle(() => ({ opacity: heroOpacity.value }));
-  const formStyle = useAnimatedStyle(() => ({
-    opacity: formOpacity.value,
-    transform: [{ translateY: (1 - formOpacity.value) * 18 }],
-  }));
 
   const handleLogin = async () => {
     setError('');
@@ -84,33 +60,34 @@ export default function LoginScreen() {
       <View style={styles.orbBottom} pointerEvents="none" />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
+          style={styles.flex}
           contentContainerStyle={[
-            styles.scroll,
-            { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 },
+            styles.scrollContent,
+            {
+              paddingTop: insets.top + SCREEN_H * 0.08,
+              paddingBottom: insets.bottom + 28,
+            },
           ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View style={[styles.hero, heroStyle]}>
+          <View style={styles.hero}>
             <Text style={styles.brandEyebrow}>OPERAÇÕES DE CAMPO</Text>
             <Text style={styles.brandTitle}>Campo Alegre</Text>
             <Text style={styles.brandSubtitle}>Acesse com as credenciais da sua equipe</Text>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={[styles.panel, formStyle]}>
+          {/* View estática — Animated/transform no pai quebra o teclado no iOS */}
+          <View style={styles.panel}>
             <Text style={styles.panelLabel}>Entrar</Text>
 
-            <View
-              style={[
-                styles.field,
-                emailFocused && styles.fieldFocused,
-                error && !email.trim() && styles.fieldError,
-              ]}
-            >
+            <View style={[styles.field, emailFocused && styles.fieldFocused]}>
               <Mail size={18} color={emailFocused ? NOPONTO.cyan : FOREST_MUTED} strokeWidth={2} />
               <TextInput
                 style={styles.input}
@@ -121,20 +98,16 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
-                textContentType="username"
+                textContentType="emailAddress"
+                autoComplete="email"
+                returnKeyType="next"
                 editable={!loading}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
             </View>
 
-            <View
-              style={[
-                styles.field,
-                senhaFocused && styles.fieldFocused,
-                error && !senha && styles.fieldError,
-              ]}
-            >
+            <View style={[styles.field, senhaFocused && styles.fieldFocused]}>
               <Lock size={18} color={senhaFocused ? NOPONTO.cyan : FOREST_MUTED} strokeWidth={2} />
               <TextInput
                 style={styles.input}
@@ -144,6 +117,9 @@ export default function LoginScreen() {
                 onChangeText={setSenha}
                 secureTextEntry={!showPassword}
                 textContentType="password"
+                autoComplete="password"
+                returnKeyType="go"
+                onSubmitEditing={handleLogin}
                 editable={!loading}
                 onFocus={() => setSenhaFocused(true)}
                 onBlur={() => setSenhaFocused(false)}
@@ -161,11 +137,7 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
-            {error ? (
-              <Animated.Text entering={FadeInDown.duration(280)} style={styles.error}>
-                {error}
-              </Animated.Text>
-            ) : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <Pressable
               onPress={handleLogin}
@@ -193,15 +165,12 @@ export default function LoginScreen() {
             <Text style={styles.hint}>
               Use o e-mail e senha fornecidos pela administração.
             </Text>
-          </Animated.View>
+          </View>
 
-          <Animated.View
-            entering={FadeInUp.delay(400).duration(500)}
-            style={styles.footer}
-          >
+          <View style={styles.footer}>
             <Text style={styles.footerPowered}>Powered by</Text>
             <NoPontoLogo width={140} />
-          </Animated.View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -236,13 +205,12 @@ const styles = StyleSheet.create({
     bottom: -40,
     left: -80,
   },
-  scroll: {
+  scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
   hero: {
-    marginBottom: 28,
+    marginBottom: 24,
     paddingHorizontal: 4,
   },
   brandEyebrow: {
@@ -289,30 +257,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: '#fff',
     borderWidth: 1.5,
     borderColor: 'rgba(27, 67, 50, 0.12)',
     borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 4,
+    minHeight: 52,
     marginBottom: 12,
   },
   fieldFocused: {
     borderColor: NOPONTO.cyan,
-    backgroundColor: '#fff',
-    shadowColor: NOPONTO.cyan,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-  },
-  fieldError: {
-    borderColor: 'rgba(239, 68, 68, 0.55)',
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: FOREST,
-    paddingVertical: Platform.OS === 'ios' ? 0 : 10,
+    paddingVertical: 14,
   },
   error: {
     color: '#DC2626',
@@ -327,7 +287,6 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.92,
-    transform: [{ scale: 0.985 }],
   },
   buttonDisabled: {
     opacity: 0.75,
@@ -351,7 +310,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footer: {
-    marginTop: 36,
+    marginTop: 'auto',
+    paddingTop: 40,
     alignItems: 'center',
     gap: 10,
   },

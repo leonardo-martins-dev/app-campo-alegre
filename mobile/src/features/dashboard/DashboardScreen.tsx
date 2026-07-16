@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
 import { fetchDashboardMetrics } from '../../core/api/dashboard';
-import { colors, spacing, borderRadius, typography } from '../../shared/theme';
+import { colors, spacing, borderRadius, typography, shadows } from '../../shared/theme';
 
 export default function DashboardScreen() {
   const [metrics, setMetrics] = useState({
@@ -20,18 +20,19 @@ export default function DashboardScreen() {
 
   const cards = [
     { label: 'Canhotos hoje', value: metrics.canhotosHoje, color: colors.primary },
-    { label: 'Canhotos pendentes', value: metrics.canhotosPendentes, color: colors.warning },
-    { label: 'Procedimentos hoje', value: metrics.procedimentosHoje, color: colors.secondary },
-    { label: 'Divergências pendentes', value: metrics.divergenciasPendentes, color: colors.error },
+    { label: 'Pendentes', value: metrics.canhotosPendentes, color: colors.warning },
+    { label: 'Procedimentos', value: metrics.procedimentosHoje, color: colors.navy },
+    { label: 'Divergências', value: metrics.divergenciasPendentes, color: colors.error },
     { label: 'Usuários ativos', value: metrics.usuariosAtivos, color: colors.success },
   ];
 
   return (
     <ScreenLayout>
-      <SectionTitle>Visão geral</SectionTitle>
+      <SectionTitle subtitle="Métricas do dia">Visão geral</SectionTitle>
       <View style={styles.grid}>
         {cards.map((c) => (
-          <View key={c.label} style={[styles.card, { borderLeftColor: c.color }]}>
+          <View key={c.label} style={styles.card}>
+            <View style={[styles.dot, { backgroundColor: c.color }]} />
             <Text style={[styles.value, { color: c.color }]}>{c.value}</Text>
             <Text style={styles.label}>{c.label}</Text>
           </View>
@@ -46,12 +47,18 @@ const styles = StyleSheet.create({
   card: {
     width: '48%',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    borderLeftWidth: 4,
+    ...shadows.soft,
   },
-  value: { fontSize: 24, fontWeight: '700' },
-  label: { ...typography.small, color: colors.textSecondary, marginTop: 4 },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginBottom: 10,
+  },
+  value: { fontSize: 28, fontWeight: '700', letterSpacing: -0.8 },
+  label: { ...typography.caption, color: colors.textSecondary, marginTop: 4 },
 });

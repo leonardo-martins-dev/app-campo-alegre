@@ -7,7 +7,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import NoPontoLogo, { NOPONTO } from '../icons/NoPontoLogo';
@@ -16,79 +15,47 @@ type Props = {
   onFinish: () => void;
 };
 
-const FADE_IN = 700;
-const HOLD = 1100;
-const FADE_OUT = 550;
+/** Entrada rápida: ~1.2s total */
+const IN = 280;
+const HOLD = 520;
+const OUT = 320;
 
 /**
- * Tela de transição premium ao abrir o app — "Powered by" + logo No Ponto.
+ * Splash concisa — Powered by + No Ponto.
  */
 export default function PoweredBySplash({ onFinish }: Props) {
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.92);
-  const poweredOpacity = useSharedValue(0);
-  const arcPulse = useSharedValue(1);
-  const exitOpacity = useSharedValue(1);
+  const content = useSharedValue(0);
+  const screen = useSharedValue(1);
 
   useEffect(() => {
-    poweredOpacity.value = withDelay(
-      120,
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) })
-    );
-    opacity.value = withDelay(
-      280,
-      withTiming(1, { duration: FADE_IN, easing: Easing.out(Easing.cubic) })
-    );
-    scale.value = withDelay(
-      280,
-      withTiming(1, { duration: FADE_IN, easing: Easing.out(Easing.cubic) })
-    );
-    arcPulse.value = withDelay(
-      500,
-      withSequence(
-        withTiming(1.04, { duration: 600, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.sin) })
-      )
-    );
-
-    const total = 280 + FADE_IN + HOLD;
-    exitOpacity.value = withDelay(
-      total,
-      withTiming(0, { duration: FADE_OUT, easing: Easing.in(Easing.cubic) }, (finished) => {
+    content.value = withTiming(1, { duration: IN, easing: Easing.out(Easing.cubic) });
+    screen.value = withDelay(
+      IN + HOLD,
+      withTiming(0, { duration: OUT, easing: Easing.in(Easing.cubic) }, (finished) => {
         if (finished) runOnJS(onFinish)();
       })
     );
-  }, [arcPulse, exitOpacity, onFinish, opacity, poweredOpacity, scale]);
+  }, [content, onFinish, screen]);
 
-  const rootStyle = useAnimatedStyle(() => ({
-    opacity: exitOpacity.value,
+  const screenStyle = useAnimatedStyle(() => ({
+    opacity: screen.value,
   }));
 
-  const poweredStyle = useAnimatedStyle(() => ({
-    opacity: poweredOpacity.value,
-    transform: [{ translateY: (1 - poweredOpacity.value) * 8 }],
-  }));
-
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value * arcPulse.value }],
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: content.value,
+    transform: [{ translateY: (1 - content.value) * 10 }],
   }));
 
   return (
-    <Animated.View style={[styles.root, rootStyle]}>
+    <Animated.View style={[styles.root, screenStyle]} pointerEvents="none">
       <LinearGradient
-        colors={[NOPONTO.navyDeep, NOPONTO.navy, '#0a5a82']}
-        start={{ x: 0.15, y: 0 }}
-        end={{ x: 0.85, y: 1 }}
+        colors={[NOPONTO.navyDeep, NOPONTO.navy]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.glow} pointerEvents="none" />
-      <View style={styles.content}>
-        <Animated.Text style={[styles.powered, poweredStyle]}>Powered by</Animated.Text>
-        <Animated.View style={logoStyle}>
-          <NoPontoLogo width={260} />
-        </Animated.View>
-      </View>
+      <Animated.View style={[styles.content, contentStyle]}>
+        <Text style={styles.powered}>Powered by</Text>
+        <NoPontoLogo width={200} />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -98,28 +65,17 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
   },
-  glow: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: NOPONTO.cyan,
-    opacity: 0.08,
-    alignSelf: 'center',
-    top: '32%',
-  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
+    gap: 14,
   },
   powered: {
-    color: 'rgba(255,255,255,0.55)',
-    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
     fontWeight: '500',
-    letterSpacing: 3.2,
+    letterSpacing: 2.8,
     textTransform: 'uppercase',
-    marginBottom: 28,
   },
 });

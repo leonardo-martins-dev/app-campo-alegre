@@ -11,7 +11,11 @@ interface ScreenLayoutProps {
 
 export default function ScreenLayout({ children, noScroll, contentContainerStyle }: ScreenLayoutProps) {
   const insets = useSafeAreaInsets();
-  const padding = { paddingBottom: insets.bottom + spacing.lg, paddingHorizontal: spacing.lg, paddingTop: spacing.md };
+  const padding = {
+    paddingBottom: insets.bottom + spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  };
 
   if (noScroll) {
     return <View style={[styles.container, padding]}>{children}</View>;
@@ -21,6 +25,7 @@ export default function ScreenLayout({ children, noScroll, contentContainerStyle
       style={styles.scroll}
       contentContainerStyle={[styles.content, padding, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       {children}
     </ScrollView>

@@ -98,8 +98,8 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarActiveTintColor: colors.navy,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: styles.tabBar,
         tabBarItemStyle: styles.tabBarItem,
         tabBarLabelStyle: styles.tabBarLabel,
@@ -163,22 +163,24 @@ function MainTabs() {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: colors.surface,
-    borderTopWidth: 0,
-    elevation: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    paddingTop: spacing.sm,
-    paddingBottom: Platform.OS === 'ios' ? 28 : spacing.md,
-    height: Platform.OS === 'ios' ? 88 : 64,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    elevation: 0,
+    shadowColor: colors.navyDeep,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    paddingTop: 6,
+    paddingBottom: Platform.OS === 'ios' ? 26 : spacing.sm,
+    height: Platform.OS === 'ios' ? 84 : 62,
   },
   tabBarItem: {
-    paddingTop: 4,
+    paddingTop: 2,
   },
   tabBarLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
+    letterSpacing: 0.1,
   },
 });
 
