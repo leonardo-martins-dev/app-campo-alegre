@@ -12,6 +12,7 @@ export default function DashboardScreen() {
     procedimentosHoje: 0,
     divergenciasPendentes: 0,
     usuariosAtivos: 0,
+    checklistsRegistradosHoje: 0,
   });
 
   useEffect(() => {
@@ -21,7 +22,8 @@ export default function DashboardScreen() {
   const cards = [
     { label: 'Canhotos hoje', value: metrics.canhotosHoje, color: colors.primary },
     { label: 'Pendentes', value: metrics.canhotosPendentes, color: colors.warning },
-    { label: 'Procedimentos', value: metrics.procedimentosHoje, color: colors.navy },
+    { label: 'Checklists', value: metrics.checklistsRegistradosHoje, color: colors.navy },
+    { label: 'Procedimentos', value: metrics.procedimentosHoje, color: colors.secondary },
     { label: 'Divergências', value: metrics.divergenciasPendentes, color: colors.error },
     { label: 'Usuários ativos', value: metrics.usuariosAtivos, color: colors.success },
   ];

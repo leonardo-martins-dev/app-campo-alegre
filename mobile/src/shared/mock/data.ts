@@ -212,6 +212,7 @@ export const MOCK_DASHBOARD = {
   procedimentosHoje: 8,
   divergenciasPendentes: 1,
   usuariosAtivos: 12,
+  checklistsRegistradosHoje: 4,
 };
 
 export const MOCK_CHECKLIST_PROMOTOR = [

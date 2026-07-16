@@ -32,12 +32,15 @@ export async function clearSession(): Promise<void> {
   await AsyncStorage.multiRemove([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER]);
 }
 
-/** Checklist diário do colaborador: { data: 'YYYY-MM-DD', canhotos: boolean, procedimento: boolean, quebra: boolean } */
+/** Checklist diário do colaborador */
 export interface ChecklistColab {
   data: string;
   canhotos: boolean;
   procedimento: boolean;
   quebra: boolean;
+  /** Checklist do dia já foi registrado (enviado) */
+  registrado?: boolean;
+  registradoEm?: string;
 }
 
 const checklistKey = () => `${STORAGE_KEYS.CHECKLIST_COLAB}_${new Date().toISOString().slice(0, 10)}`;
@@ -62,6 +65,8 @@ export async function setChecklistColab(updates: Partial<Omit<ChecklistColab, 'd
     canhotos: updates.canhotos ?? current?.canhotos ?? false,
     procedimento: updates.procedimento ?? current?.procedimento ?? false,
     quebra: updates.quebra ?? current?.quebra ?? false,
+    registrado: updates.registrado ?? current?.registrado ?? false,
+    registradoEm: updates.registradoEm ?? current?.registradoEm,
   };
   await AsyncStorage.setItem(key, JSON.stringify(next));
   return next;

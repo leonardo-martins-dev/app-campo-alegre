@@ -81,6 +81,16 @@ export async function fetchCanhotos(usuarioId?: string, lojaId?: string): Promis
   }));
 }
 
+/** Quantidade de canhotos enviados pelo usuário hoje (status enviado/aprovado). */
+export async function countCanhotosEnviadosHoje(usuarioId: string): Promise<number> {
+  const list = await fetchCanhotos(usuarioId);
+  const now = new Date();
+  const hoje = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return list.filter(
+    (c) => (c.status === 'enviado' || c.status === 'aprovado') && c.data === hoje
+  ).length;
+}
+
 export async function fetchCanhotosLancados(lojaId?: string): Promise<CanhotoLancadoDetalhe[]> {
   if (!isSupabaseConfigured) {
     return MOCK_CANHOTOS_LANCADOS.filter((c) => !lojaId || c.loja.includes(lojaId));

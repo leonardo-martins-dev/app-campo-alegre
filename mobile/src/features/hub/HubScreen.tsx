@@ -16,7 +16,8 @@ import { ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getActionsForRole } from '../../core/config/actionsConfig';
 import { getHubIcon } from '../../shared/icons/HubIcons';
-import { getChecklistColab, setChecklistColab, type ChecklistColab } from '../../core/storage/storage';
+import type { ChecklistColab } from '../../core/storage/storage';
+import { fetchChecklistHoje, upsertChecklistHoje } from '../../core/api/checklist';
 import { colors, spacing, borderRadius, typography, shadows } from '../../shared/theme';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -24,6 +25,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootStackParamList, MainTabParamList } from '../../app/navigation/types';
 import { SCREEN_TO_TAB } from '../../app/navigation/screenToTabMap';
 import { ClipboardCheck } from 'lucide-react-native';
+import { countCanhotosEnviadosHoje } from '../../core/api/canhotos';
 
 type Props = {
   navigation: CompositeNavigationProp<
@@ -37,7 +39,7 @@ const COLAB_CHECKLIST_ITEMS = [
   {
     id: 'canhotos',
     title: 'Conferir e enviar canhotos',
-    subtitle: 'Ver situação e enviar seus canhotos',
+    subtitle: 'Envie ao menos 1 canhoto para marcar',
     screen: 'Conferencia' as keyof RootStackParamList,
     icon: ClipboardCheck,
     color: colors.success,
@@ -54,13 +56,26 @@ export default function HubScreen({ navigation }: Props) {
 
   const [checklist, setChecklistState] = useState<ChecklistColab | null>(null);
   const [confirmKey, setConfirmKey] = useState<'canhotos' | null>(null);
+  const [canhotosHoje, setCanhotosHoje] = useState(0);
+  const [registering, setRegistering] = useState(false);
   const isColaborador = role === 'colaborador';
 
   const loadChecklist = useCallback(async () => {
-    if (!isColaborador) return;
-    const data = await getChecklistColab();
-    setChecklistState(data);
-  }, [isColaborador]);
+    if (!isColaborador || !user?.id) return;
+    try {
+      const data = await fetchChecklistHoje(user.id);
+      setChecklistState(data);
+    } catch {
+      setChecklistState(null);
+    }
+
+    try {
+      const count = await countCanhotosEnviadosHoje(user.id);
+      setCanhotosHoje(count);
+    } catch {
+      setCanhotosHoje(0);
+    }
+  }, [isColaborador, user?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,31 +91,6 @@ export default function HubScreen({ navigation }: Props) {
     }).start();
   }, [fadeAnim]);
 
-  const handleCheckPress = useCallback(
-    (key: 'canhotos') => {
-      if (!isColaborador) return;
-      if (checklist?.[key]) return;
-      setConfirmKey(key);
-    },
-    [isColaborador, checklist]
-  );
-
-  const handleConfirmCheck = useCallback(async () => {
-    if (!confirmKey) return;
-    const next = await setChecklistColab({ [confirmKey]: true });
-    setChecklistState(next);
-    setConfirmKey(null);
-  }, [confirmKey]);
-
-  const allChecked = Boolean(checklist?.canhotos);
-
-  const handleRegistrarChecklist = useCallback(() => {
-    if (!allChecked) return;
-    Alert.alert('Checklist registrado', 'Seu checklist do dia foi registrado com sucesso.', [
-      { text: 'OK' },
-    ]);
-  }, [allChecked]);
-
   const handleOpenScreen = useCallback(
     (screen: keyof RootStackParamList) => {
       const mapping = SCREEN_TO_TAB[screen];
@@ -113,6 +103,63 @@ export default function HubScreen({ navigation }: Props) {
     },
     [navigation]
   );
+
+  const handleCheckPress = useCallback(
+    (key: 'canhotos') => {
+      if (!isColaborador) return;
+      if (checklist?.[key]) return;
+      if (checklist?.registrado) return;
+
+      if (key === 'canhotos' && canhotosHoje < 1) {
+        Alert.alert(
+          'Envie um canhoto primeiro',
+          'Para marcar este item, registre pelo menos um canhoto hoje.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+              text: 'Enviar canhoto',
+              onPress: () => handleOpenScreen('LancamentoCanhoto'),
+            },
+          ]
+        );
+        return;
+      }
+
+      setConfirmKey(key);
+    },
+    [isColaborador, checklist, canhotosHoje, handleOpenScreen]
+  );
+
+  const handleConfirmCheck = useCallback(async () => {
+    if (!confirmKey || !user?.id) return;
+    try {
+      const next = await upsertChecklistHoje(user.id, user.lojaId, { [confirmKey]: true });
+      setChecklistState(next);
+      setConfirmKey(null);
+    } catch (e) {
+      Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível salvar o checklist.');
+    }
+  }, [confirmKey, user?.id, user?.lojaId]);
+
+  const allChecked = Boolean(checklist?.canhotos);
+  const alreadyRegistered = Boolean(checklist?.registrado);
+
+  const handleRegistrarChecklist = useCallback(async () => {
+    if (!allChecked || alreadyRegistered || registering || !user?.id) return;
+    setRegistering(true);
+    try {
+      const next = await upsertChecklistHoje(user.id, user.lojaId, {
+        registrado: true,
+        registradoEm: new Date().toISOString(),
+      });
+      setChecklistState(next);
+      Alert.alert('Checklist registrado', 'Seu checklist do dia foi salvo e já conta nas métricas.');
+    } catch (e) {
+      Alert.alert('Erro', e instanceof Error ? e.message : 'Não foi possível registrar o checklist.');
+    } finally {
+      setRegistering(false);
+    }
+  }, [allChecked, alreadyRegistered, registering, user?.id, user?.lojaId]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -147,19 +194,28 @@ export default function HubScreen({ navigation }: Props) {
             {COLAB_CHECKLIST_ITEMS.map((item) => {
               const checked = checklist?.[item.key] ?? false;
               const Icon = item.icon;
+              const subtitle =
+                canhotosHoje > 0
+                  ? `${canhotosHoje} canhoto${canhotosHoje > 1 ? 's' : ''} enviado${canhotosHoje > 1 ? 's' : ''} hoje`
+                  : item.subtitle;
               return (
                 <TouchableOpacity
                   key={item.id}
-                  style={[styles.colabCard, checked && styles.colabCardDone]}
+                  style={[
+                    styles.colabCard,
+                    checked && styles.colabCardDone,
+                    alreadyRegistered && styles.colabCardRegistered,
+                  ]}
                   onPress={() => handleOpenScreen(item.screen)}
                   activeOpacity={0.9}
                 >
                   <Pressable
                     style={styles.checkWrap}
                     onPress={(e) => {
-                      e.stopPropagation();
+                      e.stopPropagation?.();
                       handleCheckPress(item.key);
                     }}
+                    disabled={alreadyRegistered}
                   >
                     <View style={[styles.checkBig, checked && styles.checkBigDone]}>
                       {checked && <Text style={styles.checkBigText}>✓</Text>}
@@ -169,11 +225,11 @@ export default function HubScreen({ navigation }: Props) {
                     <Text style={[styles.colabCardTitle, checked && styles.colabCardTitleDone]}>
                       {item.title}
                     </Text>
-                    <Text style={styles.colabCardSubtitle}>{item.subtitle}</Text>
+                    <Text style={styles.colabCardSubtitle}>{subtitle}</Text>
                     <View style={[styles.colabCardBadge, { backgroundColor: item.color + '18' }]}>
                       <Icon size={16} color={item.color} />
                       <Text style={[styles.colabCardBadgeText, { color: item.color }]}>
-                        {checked ? 'Concluído' : 'Abrir'}
+                        {checked ? 'Concluído' : canhotosHoje > 0 ? 'Pronto para marcar' : 'Enviar canhoto'}
                       </Text>
                     </View>
                   </View>
@@ -183,13 +239,27 @@ export default function HubScreen({ navigation }: Props) {
             })}
 
             <TouchableOpacity
-              style={[styles.registrarBtn, !allChecked && styles.registrarBtnDisabled]}
+              style={[
+                styles.registrarBtn,
+                (!allChecked || alreadyRegistered) && styles.registrarBtnDisabled,
+                alreadyRegistered && styles.registrarBtnDone,
+              ]}
               onPress={handleRegistrarChecklist}
-              disabled={!allChecked}
+              disabled={!allChecked || alreadyRegistered || registering}
               activeOpacity={0.85}
             >
-              <Text style={[styles.registrarBtnText, !allChecked && styles.registrarBtnTextDisabled]}>
-                Registrar checklist
+              <Text
+                style={[
+                  styles.registrarBtnText,
+                  (!allChecked || alreadyRegistered) && styles.registrarBtnTextDisabled,
+                  alreadyRegistered && styles.registrarBtnTextDone,
+                ]}
+              >
+                {alreadyRegistered
+                  ? 'Checklist registrado ✓'
+                  : registering
+                    ? 'Registrando…'
+                    : 'Registrar checklist'}
               </Text>
             </TouchableOpacity>
           </Animated.View>
@@ -351,6 +421,9 @@ const styles = StyleSheet.create({
     borderColor: colors.success + '40',
     backgroundColor: colors.success + '08',
   },
+  colabCardRegistered: {
+    opacity: 0.92,
+  },
   checkWrap: {
     marginRight: spacing.md,
   },
@@ -414,6 +487,11 @@ const styles = StyleSheet.create({
   registrarBtnDisabled: {
     backgroundColor: colors.surfaceElevated,
   },
+  registrarBtnDone: {
+    backgroundColor: colors.success + '18',
+    borderWidth: 1,
+    borderColor: colors.success + '40',
+  },
   registrarBtnText: {
     fontSize: 16,
     fontWeight: '700',
@@ -421,6 +499,9 @@ const styles = StyleSheet.create({
   },
   registrarBtnTextDisabled: {
     color: colors.textMuted,
+  },
+  registrarBtnTextDone: {
+    color: colors.success,
   },
   modalOverlay: {
     flex: 1,
