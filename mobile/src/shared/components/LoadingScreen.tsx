@@ -1,11 +1,16 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { NOPONTO } from '../icons/NoPontoLogo';
 
 export default function LoadingScreen() {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color={colors.primary} />
+      <LinearGradient
+        colors={[NOPONTO.navyDeep, NOPONTO.navy]}
+        style={StyleSheet.absoluteFill}
+      />
+      <ActivityIndicator size="large" color={NOPONTO.cyan} />
     </View>
   );
 }
@@ -15,6 +20,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: NOPONTO.navy,
   },
 });
