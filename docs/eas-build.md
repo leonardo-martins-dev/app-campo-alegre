@@ -1,23 +1,23 @@
 # Build iOS — App Store (EAS)
 
-Execute todos os comandos **nesta pasta** (`mobile/`). Não inclui o painel web.
+Execute todos os comandos **em `mobile/`**. Este guia vive em `docs/`; o painel web não entra no build.
 
 ## Documentação relacionada
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [SUPABASE-PROD-CHECKLIST.md](./SUPABASE-PROD-CHECKLIST.md) | Backend Supabase antes do build |
-| [WEB-DEPLOY-CHECKLIST.md](./WEB-DEPLOY-CHECKLIST.md) | Painel web + URL de privacidade |
-| [V1-SCOPE.md](./V1-SCOPE.md) | Funcionalidades incluídas/ocultas na v1 |
-| [QA-TESTFLIGHT.md](./QA-TESTFLIGHT.md) | Checklist de testes em dispositivo |
-| [APP-STORE-SUBMIT.md](./APP-STORE-SUBMIT.md) | Metadados e submissão |
+| [checklist-supabase-prod.md](./checklist-supabase-prod.md) | Backend Supabase antes do build |
+| [checklist-web-deploy.md](./checklist-web-deploy.md) | Painel web + URL de privacidade |
+| [v1-scope.md](./v1-scope.md) | Funcionalidades incluídas/ocultas na v1 |
+| [checklist-qa-testflight.md](./checklist-qa-testflight.md) | Checklist de testes em dispositivo |
+| [app-store-submit.md](./app-store-submit.md) | Metadados e submissão |
 
 ## Pré-requisitos
 
 - Conta [Apple Developer](https://developer.apple.com) ($99/ano)
 - Conta [Expo](https://expo.dev)
-- Supabase em produção ([SETUP-SUPABASE.md](./SETUP-SUPABASE.md))
-- Painel web no ar com `/privacidade` ([WEB-DEPLOY-CHECKLIST.md](./WEB-DEPLOY-CHECKLIST.md))
+- Supabase em produção ([setup-supabase.md](./setup-supabase.md))
+- Painel web no ar com `/privacidade` ([checklist-web-deploy.md](./checklist-web-deploy.md))
 
 ## 1. Instalar EAS CLI
 
@@ -84,12 +84,12 @@ Preencha credenciais reais em `eas.json` → `submit.production.ios`:
 npm run submit:ios
 ```
 
-Detalhes em [APP-STORE-SUBMIT.md](./APP-STORE-SUBMIT.md).
+Detalhes em [app-store-submit.md](./app-store-submit.md).
 
 ## 7. Segurança v1
 
 - Builds de **produção** não permitem modo mock (login demo `123456`)
-- Telas mock ocultas: Importador, Upload Sistema, Notificações — ver [V1-SCOPE.md](./V1-SCOPE.md)
+- Telas mock ocultas: Importador, Upload Sistema, Notificações — ver [v1-scope.md](./v1-scope.md)
 - `.env` está no `.gitignore` — use EAS secrets para produção
 
 ## Configuração iOS já no projeto

@@ -26,7 +26,7 @@ Execute na ordem (SQL Editor ou `scripts/run-migrations-order.ps1`):
 
 ## 4. Auth
 
-- [ ] Redirect URLs de produção configuradas (ver [`web/DEPLOY.md`](../web/DEPLOY.md))
+- [ ] Redirect URLs de produção configuradas (ver [`web-deploy.md`](./web-deploy.md))
 - [ ] Template **Invite user** em português
 
 ## 5. Edge Functions

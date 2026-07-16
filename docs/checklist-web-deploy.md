@@ -4,7 +4,7 @@ O app iOS exige URL de política de privacidade válida no App Store Connect.
 
 ## 1. Deploy VPS
 
-Seguir [`web/DEPLOY.md`](../web/DEPLOY.md):
+Seguir [`web-deploy.md`](./web-deploy.md):
 
 ```bash
 cd web

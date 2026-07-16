@@ -2,7 +2,7 @@
 
 Aplicativo **Expo** (React Native) para publicação na **App Store / Play Store**.
 
-Parte do monorepo [`campo-alegre`](../). Painel web e SQL do backend ficam nas pastas irmãs [`../web`](../web) e [`../supabase`](../supabase).
+Parte do monorepo. Painel web e SQL: [`../web`](../web), [`../supabase`](../supabase).
 
 ## Estrutura
 
@@ -13,14 +13,14 @@ Parte do monorepo [`campo-alegre`](../). Painel web e SQL do backend ficam nas p
 
 ## Documentação
 
-- Negócio: [../central-hub/doc.md](../central-hub/doc.md)
-- App Store: [../central-hub/lancamento-app-store.md](../central-hub/lancamento-app-store.md)
-- Backend SQL: [../supabase/README.md](../supabase/README.md)
-- Painel web: [../web/README.md](../web/README.md)
-- Setup Supabase: [SETUP-SUPABASE.md](./SETUP-SUPABASE.md)
-- Build iOS: [EAS-BUILD.md](./EAS-BUILD.md)
-- Escopo v1: [V1-SCOPE.md](./V1-SCOPE.md)
-- Checklists deploy: [SUPABASE-PROD-CHECKLIST.md](./SUPABASE-PROD-CHECKLIST.md), [WEB-DEPLOY-CHECKLIST.md](./WEB-DEPLOY-CHECKLIST.md), [QA-TESTFLIGHT.md](./QA-TESTFLIGHT.md), [APP-STORE-SUBMIT.md](./APP-STORE-SUBMIT.md)
+Índice: [../docs/README.md](../docs/README.md)
+
+- Negócio: [../docs/negocio-central-hub.md](../docs/negocio-central-hub.md)
+- Setup Supabase: [../docs/setup-supabase.md](../docs/setup-supabase.md)
+- Build iOS: [../docs/eas-build.md](../docs/eas-build.md)
+- Escopo v1: [../docs/v1-scope.md](../docs/v1-scope.md)
+- Sync jotter: [../docs/integracao-jotter-logix.md](../docs/integracao-jotter-logix.md)
+- Checklists: [supabase](../docs/checklist-supabase-prod.md), [web](../docs/checklist-web-deploy.md), [QA](../docs/checklist-qa-testflight.md), [App Store](../docs/app-store-submit.md)
 
 ## Backend do app
 
@@ -43,8 +43,7 @@ npx expo start
 ## Níveis e telas (v1)
 
 - **Colaborador**: Lançamento canhoto, Conferência
-- **Supervisor**: + Conferência por loja, Gestão de usuários (leitura)
-- **Administração**: Conferência por loja, Gestão de usuários (leitura)
-- **Admin**: Dashboard, Gestão de lojas, Visualização unificada de canhotos
+- **Supervisor**: + Conferência por loja
+- **Administração / Admin**: Conferência por loja, consulta de usuários/lojas (somente leitura — gestão no jotter), dashboard (admin)
 
-Escopo completo: [V1-SCOPE.md](./V1-SCOPE.md). Configuração de menus: `src/core/config/actionsConfig.ts`
+Escopo completo: [../docs/v1-scope.md](../docs/v1-scope.md). Menus: `src/core/config/actionsConfig.ts`

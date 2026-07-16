@@ -1,6 +1,6 @@
 # Submissão App Store — Campo Alegre iOS
 
-Após QA aprovado em TestFlight ([`QA-TESTFLIGHT.md`](./QA-TESTFLIGHT.md)).
+Após QA aprovado em TestFlight ([`checklist-qa-testflight.md`](./checklist-qa-testflight.md)).
 
 ## 1. Build produção
 

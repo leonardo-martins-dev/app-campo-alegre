@@ -13,6 +13,9 @@ $migrations = @(
   '010_seed.sql',
   '010c_harden_handle_new_user.sql',
   '011_fix_handle_new_user.sql',
+  '012_checklist_diario.sql',
+  '013_telefone_usuario_lojas.sql',
+  '014_jotter_sync_keys.sql',
   '010b_seed_admin_profile.sql'
 )
 
@@ -29,4 +32,4 @@ foreach ($file in $migrations) {
   $i++
 }
 Write-Host "`nValidacao: supabase/validate.sql"
-Write-Host "Setup completo: ../mobile/SETUP-SUPABASE.md"
+Write-Host "Setup completo: ../docs/setup-supabase.md"

@@ -4,7 +4,7 @@ Execute em **dispositivo físico iOS** com build `eas build --platform ios --pro
 
 ## Pré-requisitos
 
-- [ ] Supabase em produção ([`SUPABASE-PROD-CHECKLIST.md`](./SUPABASE-PROD-CHECKLIST.md))
+- [ ] Supabase em produção ([`checklist-supabase-prod.md`](./checklist-supabase-prod.md))
 - [ ] EAS secrets configurados
 - [ ] Usuários de teste criados (colaborador, supervisor, administração)
 

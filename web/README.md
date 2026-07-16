@@ -10,4 +10,6 @@ npm run dev
 
 ## Deploy
 
-Veja [DEPLOY.md](./DEPLOY.md) (Vercel + Edge Functions + Auth URLs).
+Veja [../docs/web-deploy.md](../docs/web-deploy.md) (VPS + Edge Functions + Auth URLs).
+
+Documentação geral: [../docs/README.md](../docs/README.md).

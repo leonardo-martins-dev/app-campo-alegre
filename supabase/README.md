@@ -2,7 +2,7 @@
 
 Scripts SQL e Edge Functions para o backend compartilhado (mobile + painel web).
 
-**App mobile:** [../mobile](../mobile) · **Setup completo:** [../mobile/SETUP-SUPABASE.md](../mobile/SETUP-SUPABASE.md)
+**App mobile:** [../mobile](../mobile) · **Setup completo:** [../docs/setup-supabase.md](../docs/setup-supabase.md) · **Índice:** [../docs/README.md](../docs/README.md)
 
 ## Executar migrations no SQL Editor
 
@@ -23,7 +23,12 @@ Scripts SQL e Edge Functions para o backend compartilhado (mobile + painel web).
 | 9 | `008_rls_policies.sql` |
 | 10 | `009_storage_buckets.sql` |
 | 11 | `010_seed.sql` |
-| 12 | `010b_seed_admin_profile.sql` (após criar usuário admin no Auth) |
+| 12 | `010c_harden_handle_new_user.sql` |
+| 13 | `011_fix_handle_new_user.sql` |
+| 14 | `012_checklist_diario.sql` |
+| 15 | `013_telefone_usuario_lojas.sql` |
+| 16 | `014_jotter_sync_keys.sql` |
+| — | `010b_seed_admin_profile.sql` (após criar usuário admin no Auth) |
 
 Opcional (fase avançada):
 

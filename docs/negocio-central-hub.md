@@ -6,6 +6,8 @@ Documentação de referência para o aplicativo mobile da empresa **Campo Alegre
 
 **Painel web + SQL:** [`../web/`](../web/), [`../supabase/`](../supabase/).
 
+**Índice de docs:** [`README.md`](./README.md)
+
 ---
 
 ## 1. Visão geral
@@ -165,7 +167,7 @@ Com isso, criar um novo nível de acesso ou mudar o que cada nível vê fica ape
 3. **Menu**: itens filtrados por nível; mesmo critério do hub.
 4. **Telas**: implementar de forma modular em `features/*`; rotas com guard por nível.
 5. **Configuração**: um único lugar (config/API) que define ações e menus por nível para facilitar manutenção e futuro painel web.
-6. **Documentação**: este `doc.md` como referência de negócio, tecnologia e arquitetura do Central Hub e níveis de acesso.
+6. **Documentação**: [`negocio-central-hub.md`](./negocio-central-hub.md) como referência de negócio, tecnologia e arquitetura do Central Hub e níveis de acesso.
 
 ---
 

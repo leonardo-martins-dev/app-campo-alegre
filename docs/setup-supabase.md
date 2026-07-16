@@ -13,7 +13,7 @@ Backend compartilhado pelo **app mobile** e **painel web**. Scripts SQL em [`../
 
 No **SQL Editor**, execute na ordem os arquivos em `supabase/migrations/` (a partir da raiz do repo):
 
-`001` → `002` → `003` → `003b` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `010b` (após criar usuário admin no Auth)
+`001` → `002` → `003` → `003b` → `004` → `005` → `006` → `007` → `008` → `009` → `010` → `010c` → `011` → `012` → `013` → `014` → `010b` (após criar usuário admin no Auth)
 
 Validação: rode `supabase/validate.sql`
 
@@ -64,7 +64,7 @@ EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
-Para **build EAS de produção**, use secrets (ver [EAS-BUILD.md](./EAS-BUILD.md)):
+Para **build EAS de produção**, use secrets (ver [eas-build.md](./eas-build.md)):
 
 ```bash
 eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_URL --value "https://..."

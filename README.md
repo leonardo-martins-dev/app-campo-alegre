@@ -8,13 +8,15 @@ Um repositório Git, três pastas principais:
 | [`web/`](web/) | Painel Next.js (admin) | VPS (Node + Nginx/Caddy) |
 | [`supabase/`](supabase/) | Migrations SQL + Edge Functions | Supabase Cloud |
 
-Documentação de negócio: [`central-hub/doc.md`](central-hub/doc.md)
+**Documentação:** [`docs/`](docs/) — [índice](docs/README.md)
 
 ## Backend
 
 Não há servidor Node/Python no mobile. **Backend = Supabase na nuvem** (PostgreSQL + Auth + Storage + RLS). Mobile e painel usam o **mesmo projeto Supabase**.
 
-Setup: [`mobile/SETUP-SUPABASE.md`](mobile/SETUP-SUPABASE.md) · Deploy: [`OPERATIONS.md`](OPERATIONS.md)
+Usuários, lojas e canhotos do sistema são alimentados pelo painel **jotter-logix** (sync → Supabase). Ver [`docs/integracao-jotter-logix.md`](docs/integracao-jotter-logix.md).
+
+Setup: [`docs/setup-supabase.md`](docs/setup-supabase.md) · Deploy: [`docs/operations.md`](docs/operations.md)
 
 ## Desenvolvimento
 
@@ -36,7 +38,7 @@ npm install
 npm run dev
 ```
 
-**Build iOS:** [`mobile/EAS-BUILD.md`](mobile/EAS-BUILD.md) — rode comandos EAS apenas dentro de `mobile/`.
+**Build iOS:** [`docs/eas-build.md`](docs/eas-build.md) — rode comandos EAS apenas dentro de `mobile/`.
 
 ## Estrutura
 
@@ -45,6 +47,6 @@ campo-alegre/
   mobile/        ← app de campo (vai na loja)
   web/           ← administração e conferência
   supabase/      ← schema, RLS, Edge Functions
-  central-hub/   ← docs de negócio
+  docs/          ← guias e checklists
   scripts/       ← helpers de deploy/migrations
 ```
