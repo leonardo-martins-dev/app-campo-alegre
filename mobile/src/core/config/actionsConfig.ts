@@ -55,7 +55,7 @@ export const HUB_ACTIONS: HubAction[] = [
     label: 'Gestão de Usuários',
     description: 'Gerencie usuários e colaboradores',
     screen: 'GestaoUsuarios',
-    roles: ['supervisor', 'administracao'],
+    roles: ['administracao', 'admin'],
     icon: 'Users',
     color: '#0B4467',
   },
@@ -64,7 +64,7 @@ export const HUB_ACTIONS: HubAction[] = [
     label: 'Gestão de Lojas',
     description: 'Cadastro e configuração de lojas',
     screen: 'GestaoLojas',
-    roles: ['admin'],
+    roles: ['administracao', 'admin'],
     icon: 'Store',
     color: '#0090C5',
   },
@@ -87,8 +87,8 @@ export const MENU_ITEMS: MenuItem[] = [
   { id: 'lancamento', label: 'Lançamento Canhoto', screen: 'LancamentoCanhoto', roles: ['colaborador', 'supervisor', 'admin'], icon: 'Upload' },
   { id: 'conferencia', label: 'Conferência', screen: 'Conferencia', roles: ['colaborador', 'supervisor', 'administracao', 'admin'], icon: 'ClipboardCheck' },
   { id: 'visualizacao-canhotos', label: 'Ver Canhotos', screen: 'VisualizacaoCanhotos', roles: ['admin'], icon: 'Eye' },
-  { id: 'gestao-usuarios', label: 'Usuários', screen: 'GestaoUsuarios', roles: ['supervisor', 'administracao'], icon: 'Users' },
-  { id: 'gestao-lojas', label: 'Lojas', screen: 'GestaoLojas', roles: ['admin'], icon: 'Store' },
+  { id: 'gestao-usuarios', label: 'Usuários', screen: 'GestaoUsuarios', roles: ['administracao', 'admin'], icon: 'Users' },
+  { id: 'gestao-lojas', label: 'Lojas', screen: 'GestaoLojas', roles: ['administracao', 'admin'], icon: 'Store' },
   { id: 'dashboard', label: 'Dashboard', screen: 'Dashboard', roles: ['admin'], icon: 'BarChart3' },
 ];
 

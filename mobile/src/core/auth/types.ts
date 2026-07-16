@@ -10,6 +10,8 @@ export interface User {
   email: string;
   nivelAcesso: NivelAcesso;
   lojaId?: string;
+  lojaIds?: string[];
+  telefone?: string;
   ativo: boolean;
 }
 
