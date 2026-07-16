@@ -7,7 +7,8 @@ export async function fetchResumoConferenciaPorLoja(): Promise<ConferenciaItem[]
   const { data: lojas, error: lojasError } = await supabase
     .from('lojas')
     .select('id, nome')
-    .eq('ativa', true);
+    .eq('ativa', true)
+    .order('nome');
 
   if (lojasError) throw new Error(lojasError.message);
 

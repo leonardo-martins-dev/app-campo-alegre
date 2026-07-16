@@ -4,37 +4,30 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Pressable,
-  ScrollView,
   Image,
   Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
+import LojaPicker from '../../shared/components/LojaPicker';
 import { CHECKLIST_PROMOTOR_11 } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 import { useAuth } from '../../core/auth/AuthContext';
-import { fetchLojasAtivas } from '../../core/api/lojas';
 import { enviarProcedimento, fetchChecklistTemplate } from '../../core/api/procedimentos';
-import type { Loja } from '../../shared/mock/data';
-import { ImagePlus, ChevronDown } from 'lucide-react-native';
+import { ImagePlus } from 'lucide-react-native';
 
 type ChecklistItem = { id: string; label: string; requiresPhoto: boolean };
 
 export default function ProcedimentosPromotoresScreen() {
   const { user } = useAuth();
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
-  const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(CHECKLIST_PROMOTOR_11);
-  const [lojaModalVisible, setLojaModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [concluidos, setConcluidos] = useState<Record<string, boolean>>({});
   const [photos, setPhotos] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
     fetchChecklistTemplate('promotor')
       .then((items) => {
         setChecklist(items);
@@ -163,38 +156,13 @@ export default function ProcedimentosPromotoresScreen() {
     <ScreenLayout>
       <SectionTitle>Checklist procedimentos promotores</SectionTitle>
 
-      <Text style={styles.label}>Supermercado</Text>
-      <Pressable style={styles.selectTrigger} onPress={() => setLojaModalVisible(true)}>
-        <Text style={loja ? styles.selectTriggerText : styles.selectTriggerPlaceholder}>
-          {loja ? loja.nome : 'Selecionar supermercado'}
-        </Text>
-        <ChevronDown size={20} color={colors.textSecondary} />
-      </Pressable>
-
-      <Modal visible={lojaModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setLojaModalVisible(false)}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Supermercado</Text>
-            <ScrollView style={styles.lojaList}>
-              {lojasAtivas.map((l) => (
-                <TouchableOpacity
-                  key={l.id}
-                  style={styles.lojaOption}
-                  onPress={() => {
-                    setLoja({ id: l.id, nome: l.nome });
-                    setLojaModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.lojaOptionText}>{l.nome}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.modalClose} onPress={() => setLojaModalVisible(false)}>
-              <Text style={styles.modalCloseText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
+      <LojaPicker
+        label="Supermercado"
+        placeholder="Selecionar supermercado"
+        selectedIds={loja ? [loja.id] : []}
+        multiple={false}
+        onChange={(lojas) => setLoja(lojas[0] ?? null)}
+      />
 
       <View style={styles.progress}>
         <Text style={styles.progressText}>
@@ -288,54 +256,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
   },
-  selectTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    minHeight: 44,
-    marginBottom: spacing.md,
-  },
-  selectTriggerText: { fontSize: 15, color: colors.text, fontWeight: '500' },
-  selectTriggerPlaceholder: { fontSize: 15, color: colors.textSecondary },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    maxHeight: '60%',
-    overflow: 'hidden',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    padding: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  lojaList: { maxHeight: 280 },
-  lojaOption: {
-    padding: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  lojaOptionText: { fontSize: 16, color: colors.text },
-  modalClose: {
-    padding: spacing.md,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  modalCloseText: { fontSize: 16, fontWeight: '600', color: colors.primary },
   progress: { marginBottom: spacing.md },
   progressText: { ...typography.caption, color: colors.textSecondary, marginBottom: 4 },
   barBg: { height: 6, backgroundColor: colors.border, overflow: 'hidden' },

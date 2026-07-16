@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -6,6 +6,7 @@ import type { RootStackParamList } from '../../app/navigation/types';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
 import ListSkeleton from '../../shared/components/ListSkeleton';
+import LojaPicker from '../../shared/components/LojaPicker';
 import { useAuth } from '../../core/auth/AuthContext';
 import { fetchCanhotos } from '../../core/api/canhotos';
 import { fetchResumoConferenciaPorLoja } from '../../core/api/conferencia';
@@ -41,6 +42,7 @@ export default function ConferenciaScreen({ navigation }: Props) {
   const [resumo, setResumo] = useState<ConferenciaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [lojaIdsFiltro, setLojaIdsFiltro] = useState<string[]>([]);
   const hasLoadedOnce = React.useRef(false);
 
   useFocusEffect(
@@ -83,6 +85,12 @@ export default function ConferenciaScreen({ navigation }: Props) {
 
   const ultimosEnviados = canhotos.filter((c) => c.status === 'enviado' || c.status === 'aprovado');
   const pendentes = canhotos.filter((c) => c.status === 'pendente');
+
+  const resumoFiltrado = useMemo(() => {
+    if (lojaIdsFiltro.length === 0) return resumo;
+    const set = new Set(lojaIdsFiltro);
+    return resumo.filter((item) => set.has(item.id));
+  }, [resumo, lojaIdsFiltro]);
 
   return (
     <ScreenLayout>
@@ -147,12 +155,25 @@ export default function ConferenciaScreen({ navigation }: Props) {
         <>
           <SectionTitle>Resumo por loja</SectionTitle>
           <Text style={styles.hint}>Toque em uma loja para ver canhotos enviados e pendentes.</Text>
+          {!loading && resumo.length > 0 && (
+            <LojaPicker
+              label="Filtrar lojas"
+              placeholder="Todas as lojas"
+              selectedIds={lojaIdsFiltro}
+              multiple
+              onChange={(lojas) => setLojaIdsFiltro(lojas.map((l) => l.id))}
+            />
+          )}
           {loading ? (
             <ListSkeleton count={3} variant="loja" />
-          ) : resumo.length === 0 ? (
-            <Text style={styles.empty}>Nenhuma loja encontrada.</Text>
+          ) : resumoFiltrado.length === 0 ? (
+            <Text style={styles.empty}>
+              {lojaIdsFiltro.length > 0
+                ? 'Nenhuma loja correspondente ao filtro.'
+                : 'Nenhuma loja ativa encontrada.'}
+            </Text>
           ) : (
-            resumo.map((item) => (
+            resumoFiltrado.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.card}

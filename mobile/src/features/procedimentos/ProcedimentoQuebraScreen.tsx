@@ -4,20 +4,15 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Pressable,
-  ScrollView,
   Alert,
 } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
+import LojaPicker from '../../shared/components/LojaPicker';
 import { MOCK_CHECKLIST_QUEBRA } from '../../shared/mock/data';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
-import { ChevronDown } from 'lucide-react-native';
 import { useAuth } from '../../core/auth/AuthContext';
-import { fetchLojasAtivas } from '../../core/api/lojas';
 import { enviarProcedimento, fetchChecklistTemplate } from '../../core/api/procedimentos';
-import type { Loja } from '../../shared/mock/data';
 
 type QuebraItem = { id: string; label: string; concluido: boolean; requiresPhoto?: boolean };
 
@@ -27,13 +22,10 @@ const defaultQuebraItens = (): QuebraItem[] =>
 export default function ProcedimentoQuebraScreen() {
   const { user } = useAuth();
   const [itens, setItens] = useState<QuebraItem[]>(defaultQuebraItens);
-  const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
-  const [lojaModalVisible, setLojaModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
     fetchChecklistTemplate('quebra')
       .then((template) => {
         setItens(
@@ -81,42 +73,19 @@ export default function ProcedimentoQuebraScreen() {
     }
   };
 
+  const allDone = itens.every((i) => i.concluido);
+
   return (
     <ScreenLayout>
       <SectionTitle>Procedimento de quebra</SectionTitle>
 
-      <Text style={styles.fieldLabel}>Supermercado</Text>
-      <Pressable style={styles.selectTrigger} onPress={() => setLojaModalVisible(true)}>
-        <Text style={loja ? styles.selectTriggerText : styles.selectTriggerPlaceholder}>
-          {loja ? loja.nome : 'Selecionar supermercado'}
-        </Text>
-        <ChevronDown size={20} color={colors.textSecondary} />
-      </Pressable>
-
-      <Modal visible={lojaModalVisible} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setLojaModalVisible(false)}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Supermercado</Text>
-            <ScrollView style={styles.lojaList}>
-              {lojasAtivas.map((l) => (
-                <TouchableOpacity
-                  key={l.id}
-                  style={styles.lojaOption}
-                  onPress={() => {
-                    setLoja({ id: l.id, nome: l.nome });
-                    setLojaModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.lojaOptionText}>{l.nome}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.modalClose} onPress={() => setLojaModalVisible(false)}>
-              <Text style={styles.modalCloseText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
+      <LojaPicker
+        label="Supermercado"
+        placeholder="Selecionar supermercado"
+        selectedIds={loja ? [loja.id] : []}
+        multiple={false}
+        onChange={(lojas) => setLoja(lojas[0] ?? null)}
+      />
 
       <View style={styles.card}>
         {itens.map((item) => (
@@ -129,87 +98,33 @@ export default function ProcedimentoQuebraScreen() {
             <View style={[styles.check, item.concluido && styles.checkOk]}>
               {item.concluido && <Text style={styles.checkText}>✓</Text>}
             </View>
-            <Text style={[styles.label, item.concluido && styles.labelDone]}>{item.label}</Text>
+            <Text style={[styles.itemLabel, item.concluido && styles.labelDone]}>{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
+
       <TouchableOpacity
-        style={[styles.button, submitting && { opacity: 0.7 }]}
+        style={[styles.button, (!allDone || !loja || submitting) && styles.buttonDisabled]}
         onPress={handleEnviar}
-        disabled={submitting}
+        disabled={!allDone || !loja || submitting}
         activeOpacity={0.85}
       >
-        <Text style={styles.buttonText}>
-          {submitting ? 'Enviando...' : 'Enviar procedimento de quebra'}
-        </Text>
+        <Text style={styles.buttonText}>{submitting ? 'Enviando...' : 'Enviar procedimento'}</Text>
       </TouchableOpacity>
     </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  fieldLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  selectTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    minHeight: 44,
-    marginBottom: spacing.md,
-  },
-  selectTriggerText: { fontSize: 15, color: colors.text, fontWeight: '500' },
-  selectTriggerPlaceholder: { fontSize: 15, color: colors.textSecondary },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    maxHeight: '60%',
-    overflow: 'hidden',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    padding: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  lojaList: { maxHeight: 280 },
-  lojaOption: {
-    padding: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  lojaOptionText: { fontSize: 16, color: colors.text },
-  modalClose: {
-    padding: spacing.md,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  modalCloseText: { fontSize: 16, fontWeight: '600', color: colors.primary },
   card: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    marginBottom: spacing.lg,
   },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: spacing.sm },
   check: {
     width: 24,
     height: 24,
@@ -219,17 +134,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+    marginTop: 2,
   },
   checkOk: { backgroundColor: colors.primary, borderColor: colors.primary },
   checkText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  label: { ...typography.body, color: colors.text, flex: 1 },
+  itemLabel: { ...typography.body, color: colors.text, flex: 1, fontSize: 14 },
   labelDone: { color: colors.textSecondary, textDecorationLine: 'line-through' },
   button: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.navy,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
+    paddingVertical: 15,
     alignItems: 'center',
-    marginTop: spacing.lg,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  buttonDisabled: { opacity: 0.5 },
 });

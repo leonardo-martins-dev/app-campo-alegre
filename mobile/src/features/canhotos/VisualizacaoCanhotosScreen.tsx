@@ -2,13 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
+import LojaPicker from '../../shared/components/LojaPicker';
 import {
   type CanhotoLancadoDetalhe,
   type CanhotoSistema,
-  type Loja,
 } from '../../shared/mock/data';
 import { fetchCanhotosLancados, fetchCanhotosSistema } from '../../core/api/canhotos';
-import { fetchLojasAtivas } from '../../core/api/lojas';
 import { colors, spacing, borderRadius, typography } from '../../shared/theme';
 
 const statusLabel: Record<string, string> = {
@@ -25,47 +24,47 @@ const statusColor: Record<string, string> = {
 export default function VisualizacaoCanhotosScreen() {
   const [tab, setTab] = useState<'lancados' | 'sistema' | 'atrasados'>('lancados');
   const [numeroFiltro, setNumeroFiltro] = useState('');
-  const [lojaFiltro, setLojaFiltro] = useState<string | null>(null);
+  const [lojaIdsFiltro, setLojaIdsFiltro] = useState<string[]>([]);
+  const [lojaNomesFiltro, setLojaNomesFiltro] = useState<string[]>([]);
 
   const [lancados, setLancados] = useState<CanhotoLancadoDetalhe[]>([]);
   const [sistema, setSistema] = useState<CanhotoSistema[]>([]);
-  const [lojasAtivas, setLojasAtivas] = useState<Loja[]>([]);
 
   useEffect(() => {
     fetchCanhotosLancados().then(setLancados).catch(() => setLancados([]));
     fetchCanhotosSistema().then(setSistema).catch(() => setSistema([]));
-    fetchLojasAtivas().then(setLojasAtivas).catch(() => setLojasAtivas([]));
   }, []);
 
   const filtradosLancados = useMemo(() => {
     return lancados.filter((c) => {
       if (numeroFiltro && !c.numero.includes(numeroFiltro.trim())) return false;
-      if (lojaFiltro && c.loja !== lojaFiltro) return false;
+      if (lojaNomesFiltro.length > 0 && !lojaNomesFiltro.includes(c.loja)) return false;
       return true;
     });
-  }, [lancados, numeroFiltro, lojaFiltro]);
+  }, [lancados, numeroFiltro, lojaNomesFiltro]);
 
   const filtradosSistemaDisponiveis = useMemo<CanhotoSistema[]>(() => {
     return sistema.filter((c) => {
       if (c.status !== 'disponivel') return false;
       if (numeroFiltro && !c.numero.includes(numeroFiltro.trim())) return false;
-      if (lojaFiltro && c.nome_fantasia !== lojaFiltro) return false;
+      if (lojaNomesFiltro.length > 0 && !lojaNomesFiltro.includes(c.nome_fantasia ?? '')) return false;
       return true;
     });
-  }, [sistema, numeroFiltro, lojaFiltro]);
+  }, [sistema, numeroFiltro, lojaNomesFiltro]);
 
   const filtradosSistemaAtrasados = useMemo<CanhotoSistema[]>(() => {
     return sistema.filter((c) => {
       if (c.status !== 'atrasado') return false;
       if (numeroFiltro && !c.numero.includes(numeroFiltro.trim())) return false;
-      if (lojaFiltro && c.nome_fantasia !== lojaFiltro) return false;
+      if (lojaNomesFiltro.length > 0 && !lojaNomesFiltro.includes(c.nome_fantasia ?? '')) return false;
       return true;
     });
-  }, [sistema, numeroFiltro, lojaFiltro]);
+  }, [sistema, numeroFiltro, lojaNomesFiltro]);
 
   const limparFiltros = () => {
     setNumeroFiltro('');
-    setLojaFiltro(null);
+    setLojaIdsFiltro([]);
+    setLojaNomesFiltro([]);
   };
 
   return (
@@ -97,44 +96,25 @@ export default function VisualizacaoCanhotosScreen() {
       </View>
 
       <View style={styles.filters}>
-        <View style={styles.filterNumeroWrap}>
-          <TextInput
-            style={styles.filterInput}
-            placeholder="Filtrar por número"
-            placeholderTextColor={colors.textSecondary}
-            value={numeroFiltro}
-            onChangeText={setNumeroFiltro}
-            keyboardType="number-pad"
-          />
-        </View>
-        <View style={styles.filterLojaWrap}>
-          <Text style={styles.filterLabel}>Loja</Text>
-          <View style={styles.lojaChips}>
-            <TouchableOpacity
-              style={[styles.lojaChip, !lojaFiltro && styles.lojaChipActive]}
-              onPress={() => setLojaFiltro(null)}
-            >
-              <Text style={[styles.lojaChipText, !lojaFiltro && styles.lojaChipTextActive]}>Todas</Text>
-            </TouchableOpacity>
-            {lojasAtivas.map((l) => (
-              <TouchableOpacity
-                key={l.id}
-                style={[styles.lojaChip, lojaFiltro === l.nome && styles.lojaChipActive]}
-                onPress={() => setLojaFiltro(l.nome)}
-              >
-                <Text
-                  style={[
-                    styles.lojaChipText,
-                    lojaFiltro === l.nome && styles.lojaChipTextActive,
-                  ]}
-                >
-                  {l.nome}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-        {(numeroFiltro || lojaFiltro) && (
+        <TextInput
+          style={styles.filterInput}
+          placeholder="Filtrar por número"
+          placeholderTextColor={colors.textSecondary}
+          value={numeroFiltro}
+          onChangeText={setNumeroFiltro}
+          keyboardType="number-pad"
+        />
+        <LojaPicker
+          label="Filtrar por loja"
+          selectedIds={lojaIdsFiltro}
+          placeholder="Selecionar lojas..."
+          multiple
+          onChange={(lojas) => {
+            setLojaIdsFiltro(lojas.map((l) => l.id));
+            setLojaNomesFiltro(lojas.map((l) => l.nome));
+          }}
+        />
+        {(numeroFiltro || lojaNomesFiltro.length > 0) && (
           <TouchableOpacity style={styles.clearBtn} onPress={limparFiltros}>
             <Text style={styles.clearBtnText}>Limpar filtros</Text>
           </TouchableOpacity>
@@ -227,9 +207,6 @@ const styles = StyleSheet.create({
   filters: {
     marginBottom: spacing.md,
   },
-  filterNumeroWrap: {
-    marginBottom: spacing.sm,
-  },
   filterInput: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -238,38 +215,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: 14,
     color: colors.text,
-  },
-  filterLojaWrap: {
-    marginBottom: spacing.xs,
-  },
-  filterLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  lojaChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  lojaChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  lojaChipActive: {
-    backgroundColor: colors.primary + '14',
-    borderColor: colors.primary,
-  },
-  lojaChipText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  lojaChipTextActive: {
-    color: colors.text,
-    fontWeight: '600',
+    marginBottom: spacing.sm,
+    backgroundColor: colors.surface,
   },
   clearBtn: {
     alignSelf: 'flex-start',
