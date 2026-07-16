@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Falha o build EAS production se variáveis Supabase não estiverem definidas.
- * Referenciado em eas.json → build.production.env.
+ * Rodado no EAS via package.json → eas-build-pre-install.
  */
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';

@@ -15,8 +15,7 @@
       }
     },
     "production": {
-      "autoIncrement": true,
-      "prebuildCommand": "node scripts/validate-production-env.js"
+      "autoIncrement": true
     }
   },
   "submit": {
