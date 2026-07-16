@@ -1,8 +1,8 @@
 export const APP_NAME = 'Campo Alegre';
 
-/** URL pública da política de privacidade (App Store). Atualizar após deploy do painel web. */
+/** URL pública da política de privacidade (App Store). */
 export const PRIVACY_POLICY_URL =
-  process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? 'https://seu-dominio.com/privacidade';
+  process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? 'https://noponto.io/privacidade';
 
 export const STORAGE_KEYS = {
   TOKEN: '@campo_alegre_token',

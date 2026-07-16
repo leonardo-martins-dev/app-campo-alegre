@@ -62,13 +62,14 @@ Em **App Review Information** → Notes:
 ```
 Conta de teste:
 E-mail: demo@campoalegre.com.br
-Senha: [senha criada no Supabase]
+Senha: ReviewCampo2026!
 
 O app requer login. Use a conta acima (perfil colaborador).
-Funcionalidades: canhotos, procedimentos e conferência.
+Fluxo principal: Início → Lançamento de Canhoto (fotos) → Visualização / Conferência.
+Política de privacidade: https://noponto.io/privacidade
 ```
 
-- [ ] Usuário demo criado e testado antes do submit
+- [x] Usuário demo criado e testado antes do submit
 - [ ] Contato de revisão preenchido
 
 ## 5. Pós-submissão
