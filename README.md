@@ -5,7 +5,7 @@ Um repositório Git, três pastas principais:
 | Pasta | Conteúdo | Publicação |
 |-------|----------|------------|
 | [`mobile/`](mobile/) | App Expo (React Native) | App Store / Play Store (EAS) |
-| [`web/`](web/) | Painel Next.js (admin) | Vercel ou similar |
+| [`web/`](web/) | Painel Next.js (admin) | VPS (Node + Nginx/Caddy) |
 | [`supabase/`](supabase/) | Migrations SQL + Edge Functions | Supabase Cloud |
 
 Documentação de negócio: [`central-hub/doc.md`](central-hub/doc.md)

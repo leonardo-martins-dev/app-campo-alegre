@@ -15,8 +15,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.campoalegre.hub",
-      "buildNumber": "1",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Para fotografar canhotos e procedimentos de campo.",
         "NSPhotoLibraryUsageDescription": "Para anexar fotos da galeria nos envios operacionais.",
         "NSMicrophoneUsageDescription": "Microfone usado apenas se necessário pela câmera."
@@ -31,9 +31,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -41,7 +42,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "SUBSTITUIR_EAS_PROJECT_ID"
+        "projectId": "536ad370-ab10-48f6-888a-f371ceda6f15"
       },
       "privacyPolicyUrl": "https://seu-dominio.com/privacidade"
     },
@@ -59,6 +60,7 @@
           "cameraPermission": "Permite fotografar canhotos e procedimentos."
         }
       ]
-    ]
+    ],
+    "owner": "yunkzinn"
   }
 }

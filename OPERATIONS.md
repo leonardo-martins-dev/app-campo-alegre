@@ -1,6 +1,6 @@
 # Operações — deploy e produção
 
-Checklist do monorepo. Credenciais ficam **fora** do Git (`.env`, Vercel, EAS secrets).
+Checklist do monorepo. Credenciais ficam **fora** do Git (`.env`, EAS secrets, env da VPS).
 
 ## 1. Supabase (backend)
 
@@ -9,22 +9,21 @@ Checklist do monorepo. Credenciais ficam **fora** do Git (`.env`, Vercel, EAS se
 3. Primeiro admin: Auth → Add user → `010b_seed_admin_profile.sql`
 4. Mobile: [`mobile/SETUP-SUPABASE.md`](mobile/SETUP-SUPABASE.md)
 
-## 2. Painel web (Vercel)
+## 2. Painel web (VPS)
 
-[`web/DEPLOY.md`](web/DEPLOY.md) — variáveis `NEXT_PUBLIC_SUPABASE_*`, redirect URLs no Auth.
+[`web/DEPLOY.md`](web/DEPLOY.md) — Node + Nginx/Caddy, variáveis `NEXT_PUBLIC_SUPABASE_*`, redirect URLs no Auth.
 
 ```bash
 cd web
-npm install && npm run build
-npx vercel
+npm install && npm run build && npm start
 ```
 
 ## 3. Edge Functions
 
-Com [Supabase CLI](https://supabase.com/docs/guides/cli):
+Já deployadas no projeto Campo Alegre (`invite-user`, `upload-sistema`). Redeploy:
 
 ```powershell
-.\scripts\deploy-edge-functions.ps1 -ProjectRef SEU_PROJECT_REF
+.\scripts\deploy-edge-functions.ps1 -ProjectRef yhdoradocardgedgrgzj
 ```
 
 ## 4. App iOS (EAS)
@@ -43,9 +42,8 @@ Checklists antes do build:
 cd mobile
 npm install -g eas-cli
 eas login
-eas init   # preenche projectId em app.json
-eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_URL --value "..."
-eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."
-npm run build:ios:preview      # TestFlight
+eas init   # projectId já preenchido
+# env vars já no EAS (preview/production/development)
+npm run build:ios:preview      # distribuição interna / TestFlight
 npm run build:ios:production   # App Store
 ```
