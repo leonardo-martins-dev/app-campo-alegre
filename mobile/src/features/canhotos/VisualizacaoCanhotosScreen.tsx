@@ -21,6 +21,22 @@ const statusColor: Record<string, string> = {
   divergente: colors.error,
 };
 
+/** Formata data ISO (yyyy-mm-dd) ou similar para dd/mm/yyyy */
+function formatDateBr(value?: string | null): string {
+  if (!value) return '—';
+  const raw = String(value).trim();
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  const br = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (br) return raw.slice(0, 10);
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 export default function VisualizacaoCanhotosScreen() {
   const [tab, setTab] = useState<'lancados' | 'sistema' | 'atrasados'>('lancados');
   const [numeroFiltro, setNumeroFiltro] = useState('');
@@ -84,7 +100,7 @@ export default function VisualizacaoCanhotosScreen() {
           onPress={() => setTab('sistema')}
           activeOpacity={0.8}
         >
-          <Text style={[styles.tabText, tab === 'sistema' && styles.tabTextActive]}>Sistema disponíveis</Text>
+          <Text style={[styles.tabText, tab === 'sistema' && styles.tabTextActive]}>Disponíveis</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, tab === 'atrasados' && styles.tabActive]}
@@ -134,7 +150,7 @@ export default function VisualizacaoCanhotosScreen() {
             </View>
             <Text style={styles.loja}>{c.loja} · {c.usuario}</Text>
             <Text style={styles.data}>
-              {c.data}
+              {formatDateBr(c.data)}
               {c.enviadoEm ? ` · Enviado ${c.enviadoEm}` : ''}
             </Text>
             {c.observacoes && <Text style={styles.obs}>{c.observacoes}</Text>}
@@ -151,10 +167,7 @@ export default function VisualizacaoCanhotosScreen() {
               </View>
             </View>
             <Text style={styles.loja}>{c.nome_fantasia ?? '—'}</Text>
-            <Text style={styles.data}>{c.data}{c.nfe ? ` · NFe ${c.nfe}` : ''}</Text>
-            {c.total != null && (
-              <Text style={styles.obs}>Total: R$ {c.total.toFixed(2)}</Text>
-            )}
+            <Text style={styles.data}>{formatDateBr(c.data)}</Text>
           </View>
         ))}
 
@@ -168,10 +181,7 @@ export default function VisualizacaoCanhotosScreen() {
               </View>
             </View>
             <Text style={styles.loja}>{c.nome_fantasia ?? '—'}</Text>
-            <Text style={styles.data}>{c.data}{c.nfe ? ` · NFe ${c.nfe}` : ''}</Text>
-            {c.total != null && (
-              <Text style={styles.obs}>Total: R$ {c.total.toFixed(2)}</Text>
-            )}
+            <Text style={styles.data}>{formatDateBr(c.data)}</Text>
           </View>
         ))}
     </ScreenLayout>
