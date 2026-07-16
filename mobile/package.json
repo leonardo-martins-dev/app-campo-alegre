@@ -10,9 +10,9 @@
     "typecheck": "tsc --noEmit",
     "validate:production-env": "node scripts/validate-production-env.js",
     "eas-build-pre-install": "node scripts/validate-production-env.js",
-    "build:ios:preview": "eas build --platform ios --profile preview",
-    "build:ios:production": "eas build --platform ios --profile production",
-    "submit:ios": "eas submit --platform ios --profile production"
+    "build:ios:preview": "npx eas-cli@latest build --platform ios --profile preview",
+    "build:ios:production": "npx eas-cli@latest build --platform ios --profile production",
+    "submit:ios": "npx eas-cli@latest submit --platform ios --profile production"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
