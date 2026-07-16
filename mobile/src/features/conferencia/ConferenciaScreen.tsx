@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation/types';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
+import ListSkeleton from '../../shared/components/ListSkeleton';
 import { useAuth } from '../../core/auth/AuthContext';
 import { fetchCanhotos } from '../../core/api/canhotos';
 import { fetchResumoConferenciaPorLoja } from '../../core/api/conferencia';
@@ -37,26 +39,47 @@ export default function ConferenciaScreen({ navigation }: Props) {
 
   const [canhotos, setCanhotos] = useState<Canhoto[]>([]);
   const [resumo, setResumo] = useState<ConferenciaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const hasLoadedOnce = React.useRef(false);
 
-  useEffect(() => {
-    setLoadError(null);
-    if (isColaborador) {
-      fetchCanhotos(user?.id)
-        .then(setCanhotos)
-        .catch(() => {
-          setCanhotos([]);
-          setLoadError('Não foi possível carregar os canhotos. Verifique sua conexão.');
-        });
-    } else if (isResumoPorLoja) {
-      fetchResumoConferenciaPorLoja()
-        .then(setResumo)
-        .catch(() => {
-          setResumo([]);
-          setLoadError('Não foi possível carregar o resumo. Verifique sua conexão.');
-        });
-    }
-  }, [isColaborador, isResumoPorLoja, user?.id]);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      setLoadError(null);
+      if (!hasLoadedOnce.current) setLoading(true);
+
+      const load = async () => {
+        try {
+          if (isColaborador) {
+            const data = await fetchCanhotos(user?.id);
+            if (!cancelled) setCanhotos(data);
+          } else if (isResumoPorLoja) {
+            const data = await fetchResumoConferenciaPorLoja();
+            if (!cancelled) setResumo(data);
+          }
+          if (!cancelled) hasLoadedOnce.current = true;
+        } catch {
+          if (!cancelled) {
+            if (isColaborador) setCanhotos([]);
+            else setResumo([]);
+            setLoadError(
+              isColaborador
+                ? 'Não foi possível carregar os canhotos. Verifique sua conexão.'
+                : 'Não foi possível carregar o resumo. Verifique sua conexão.'
+            );
+          }
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      load();
+      return () => {
+        cancelled = true;
+      };
+    }, [isColaborador, isResumoPorLoja, user?.id])
+  );
 
   const ultimosEnviados = canhotos.filter((c) => c.status === 'enviado' || c.status === 'aprovado');
   const pendentes = canhotos.filter((c) => c.status === 'pendente');
@@ -79,7 +102,9 @@ export default function ConferenciaScreen({ navigation }: Props) {
       {isColaborador ? (
         <>
           <SectionTitle>Últimos canhotos enviados</SectionTitle>
-          {ultimosEnviados.length === 0 ? (
+          {loading ? (
+            <ListSkeleton count={2} variant="canhoto" />
+          ) : ultimosEnviados.length === 0 ? (
             <Text style={styles.empty}>Nenhum canhoto enviado ainda.</Text>
           ) : (
             ultimosEnviados.map((c) => (
@@ -99,7 +124,9 @@ export default function ConferenciaScreen({ navigation }: Props) {
           )}
 
           <SectionTitle>Canhotos pendentes</SectionTitle>
-          {pendentes.length === 0 ? (
+          {loading ? (
+            <ListSkeleton count={2} variant="canhoto" />
+          ) : pendentes.length === 0 ? (
             <Text style={styles.empty}>Nenhum canhoto pendente.</Text>
           ) : (
             pendentes.map((c) => (
@@ -120,35 +147,41 @@ export default function ConferenciaScreen({ navigation }: Props) {
         <>
           <SectionTitle>Resumo por loja</SectionTitle>
           <Text style={styles.hint}>Toque em uma loja para ver canhotos enviados e pendentes.</Text>
-          {resumo.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.card}
-              onPress={() => navigation.navigate('ConferenciaPorLoja', { lojaId: item.id, lojaNome: item.loja })}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.loja}>{item.loja}</Text>
-              <View style={styles.stats}>
-                <View style={styles.stat}>
-                  <Text style={styles.statValue}>{item.canhotosEnviados}</Text>
-                  <Text style={styles.statLabel}>Enviados</Text>
+          {loading ? (
+            <ListSkeleton count={3} variant="loja" />
+          ) : resumo.length === 0 ? (
+            <Text style={styles.empty}>Nenhuma loja encontrada.</Text>
+          ) : (
+            resumo.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.card}
+                onPress={() => navigation.navigate('ConferenciaPorLoja', { lojaId: item.id, lojaNome: item.loja })}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.loja}>{item.loja}</Text>
+                <View style={styles.stats}>
+                  <View style={styles.stat}>
+                    <Text style={styles.statValue}>{item.canhotosEnviados}</Text>
+                    <Text style={styles.statLabel}>Enviados</Text>
+                  </View>
+                  <View style={styles.stat}>
+                    <Text style={[styles.statValue, item.canhotosPendentes > 0 && { color: colors.warning }]}>
+                      {item.canhotosPendentes}
+                    </Text>
+                    <Text style={styles.statLabel}>Pendentes</Text>
+                  </View>
+                  <View style={styles.stat}>
+                    <Text style={[styles.statValue, item.divergencias > 0 && { color: colors.error }]}>
+                      {item.divergencias}
+                    </Text>
+                    <Text style={styles.statLabel}>Divergências</Text>
+                  </View>
                 </View>
-                <View style={styles.stat}>
-                  <Text style={[styles.statValue, item.canhotosPendentes > 0 && { color: colors.warning }]}>
-                    {item.canhotosPendentes}
-                  </Text>
-                  <Text style={styles.statLabel}>Pendentes</Text>
-                </View>
-                <View style={styles.stat}>
-                  <Text style={[styles.statValue, item.divergencias > 0 && { color: colors.error }]}>
-                    {item.divergencias}
-                  </Text>
-                  <Text style={styles.statLabel}>Divergências</Text>
-                </View>
-              </View>
-              <Text style={styles.updated}>Atualizado: {item.ultimaAtualizacao}</Text>
-            </TouchableOpacity>
-          ))}
+                <Text style={styles.updated}>Atualizado: {item.ultimaAtualizacao}</Text>
+              </TouchableOpacity>
+            ))
+          )}
         </>
       )}
     </ScreenLayout>

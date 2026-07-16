@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation/types';
 import ScreenLayout from '../../shared/components/ScreenLayout';
 import SectionTitle from '../../shared/components/SectionTitle';
+import ListSkeleton from '../../shared/components/ListSkeleton';
 import { useAuth } from '../../core/auth/AuthContext';
 import { fetchCanhotos, atualizarStatusCanhoto } from '../../core/api/canhotos';
 import type { Canhoto } from '../../shared/mock/data';
@@ -32,14 +33,26 @@ export default function ConferenciaPorLojaScreen({ route }: Props) {
   const isSupervisor = user?.nivelAcesso === 'supervisor';
 
   const [canhotos, setCanhotos] = useState<Canhoto[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const load = () => {
-    fetchCanhotos(undefined, lojaId).then(setCanhotos).catch(() => setCanhotos([]));
-  };
+  const load = useCallback(
+    async (withSkeleton: boolean) => {
+      if (withSkeleton) setLoading(true);
+      try {
+        const data = await fetchCanhotos(undefined, lojaId);
+        setCanhotos(data);
+      } catch {
+        setCanhotos([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [lojaId]
+  );
 
   useEffect(() => {
-    load();
-  }, [lojaId]);
+    load(true);
+  }, [load]);
 
   const enviados = canhotos.filter((c) => ['enviado', 'divergente', 'aprovado', 'rejeitado'].includes(c.status));
   const pendentes = canhotos.filter((c) => c.status === 'pendente');
@@ -53,7 +66,7 @@ export default function ConferenciaPorLojaScreen({ route }: Props) {
         onPress: async () => {
           try {
             await atualizarStatusCanhoto(canhotoId, status, user.id);
-            load();
+            await load(false);
           } catch (e) {
             Alert.alert('Erro', e instanceof Error ? e.message : 'Falha na conferência.');
           }
@@ -81,7 +94,9 @@ export default function ConferenciaPorLojaScreen({ route }: Props) {
       <SectionTitle>{lojaNome}</SectionTitle>
 
       <SectionTitle>Canhotos enviados</SectionTitle>
-      {enviados.length === 0 ? (
+      {loading ? (
+        <ListSkeleton count={3} variant="canhoto" />
+      ) : enviados.length === 0 ? (
         <Text style={styles.empty}>Nenhum canhoto enviado nesta loja.</Text>
       ) : (
         enviados.map((c) => (
@@ -101,7 +116,9 @@ export default function ConferenciaPorLojaScreen({ route }: Props) {
       )}
 
       <SectionTitle>Canhotos pendentes</SectionTitle>
-      {pendentes.length === 0 ? (
+      {loading ? (
+        <ListSkeleton count={2} variant="canhoto" />
+      ) : pendentes.length === 0 ? (
         <Text style={styles.empty}>Nenhum canhoto pendente nesta loja.</Text>
       ) : (
         pendentes.map((c) => (
