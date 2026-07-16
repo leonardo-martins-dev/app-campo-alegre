@@ -1,41 +1,30 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Monorepo Campo Alegre
 
-# dependencies
+# Dependências na raiz (legado / instalados por engano)
 node_modules/
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+# App mobile (Expo)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/ios/
+mobile/android/
+mobile/.env
+mobile/.env*.local
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Painel web (Next.js)
+web/node_modules/
+web/.next/
+web/.env.local
 
-# Metro
-.metro-health-check*
+# Supabase (secrets locais)
+supabase/.env
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# OS / IDE
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
+# Projetos legados (fora do Campo Alegre Hub)
+jotter-logix/
+remix-of-campo-alegre-linker/
