@@ -52,8 +52,8 @@ export const HUB_ACTIONS: HubAction[] = [
   },
   {
     id: 'gestao-usuarios',
-    label: 'Gestão de Usuários',
-    description: 'Gerencie usuários e colaboradores',
+    label: 'Usuários (consulta)',
+    description: 'Lista sincronizada do painel jotter (somente leitura)',
     screen: 'GestaoUsuarios',
     roles: ['administracao', 'admin'],
     icon: 'Users',
@@ -61,8 +61,8 @@ export const HUB_ACTIONS: HubAction[] = [
   },
   {
     id: 'gestao-lojas',
-    label: 'Gestão de Lojas',
-    description: 'Cadastro e configuração de lojas',
+    label: 'Lojas (consulta)',
+    description: 'Lista sincronizada do painel jotter (somente leitura)',
     screen: 'GestaoLojas',
     roles: ['administracao', 'admin'],
     icon: 'Store',
