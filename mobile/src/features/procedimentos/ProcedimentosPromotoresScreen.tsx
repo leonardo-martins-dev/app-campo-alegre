@@ -72,6 +72,8 @@ export default function ProcedimentosPromotoresScreen() {
         quality: 0.8,
         allowsEditing: source === 'camera',
         aspect: source === 'camera' ? [4, 3] : undefined,
+        allowsMultipleSelection: source === 'library',
+        selectionLimit: source === 'library' ? 10 : 1,
       };
       const result =
         source === 'camera'

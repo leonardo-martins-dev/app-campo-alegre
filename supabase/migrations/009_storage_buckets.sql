@@ -6,14 +6,14 @@ VALUES
     'canhotos-fotos',
     'canhotos-fotos',
     false,
-    10485760,
+    31457280,
     ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/heic']
   ),
   (
     'procedimentos-fotos',
     'procedimentos-fotos',
     false,
-    10485760,
+    31457280,
     ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/heic']
   )
 ON CONFLICT (id) DO NOTHING;

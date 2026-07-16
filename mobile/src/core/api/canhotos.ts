@@ -30,29 +30,72 @@ export async function registrarCanhoto(params: {
   numero: string;
   lojaId: string;
   usuarioId: string;
-  photoUri: string;
+  /** 1 a 3 URIs locais */
+  photoUris: string[];
   observacoes?: string;
 }): Promise<void> {
   if (!isSupabaseConfigured) return;
 
-  const canhotoId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  const fotoPath = await uploadImage(
-    'canhotos-fotos',
-    `${params.lojaId}/${canhotoId}/foto`,
-    params.photoUri
-  );
+  const uris = params.photoUris.filter(Boolean).slice(0, 3);
+  if (uris.length === 0) throw new Error('Anexe pelo menos uma foto.');
 
-  const { error } = await supabase.from('canhotos').insert({
-    numero: params.numero,
-    loja_id: params.lojaId,
-    usuario_id: params.usuarioId,
-    foto_path: fotoPath,
-    status: 'enviado',
-    observacoes: params.observacoes ?? null,
-    enviado_em: new Date().toISOString(),
-  });
+  const draftId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const paths: string[] = [];
+  for (let i = 0; i < uris.length; i++) {
+    const path = await uploadImage(
+      'canhotos-fotos',
+      `${params.lojaId}/${draftId}/${i}`,
+      uris[i]
+    );
+    if (!path) throw new Error('Falha no upload da imagem.');
+    paths.push(path);
+  }
+
+  const { data: inserted, error } = await supabase
+    .from('canhotos')
+    .insert({
+      numero: params.numero,
+      loja_id: params.lojaId,
+      usuario_id: params.usuarioId,
+      foto_path: paths[0],
+      status: 'enviado',
+      observacoes: params.observacoes ?? null,
+      enviado_em: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
 
   if (error) throw new Error(error.message);
+  if (!inserted?.id) throw new Error('Falha ao registrar canhoto.');
+
+  const fotosRows = paths.map((storage_path, ordem) => ({
+    canhoto_id: inserted.id,
+    storage_path,
+    ordem,
+  }));
+
+  const { error: fotosError } = await supabase.from('canhoto_fotos').insert(fotosRows);
+  if (fotosError) throw new Error(fotosError.message);
+}
+
+/** Registra vários canhotos em sequência (até 3 fotos cada). */
+export async function registrarCanhotos(
+  items: Array<{
+    numero: string;
+    photoUris: string[];
+    observacoes?: string;
+  }>,
+  ctx: { lojaId: string; usuarioId: string }
+): Promise<void> {
+  for (const item of items) {
+    await registrarCanhoto({
+      numero: item.numero,
+      lojaId: ctx.lojaId,
+      usuarioId: ctx.usuarioId,
+      photoUris: item.photoUris,
+      observacoes: item.observacoes,
+    });
+  }
 }
 
 export async function fetchCanhotos(usuarioId?: string, lojaId?: string): Promise<Canhoto[]> {
